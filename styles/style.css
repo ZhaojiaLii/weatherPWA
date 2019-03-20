@@ -1,0 +1,154 @@
+.header{
+    height: 80px;
+    
+}
+
+
+.header_title{
+    color: white;
+    font-size: 25px;
+    text-align: center;
+    margin-left: 130px;
+    margin-right: 130px;
+    
+}
+
+
+
+#add_btn{
+    float: right;
+    width: 20px;
+    height: 20px;
+    border: 0px;
+    cursor: pointer;
+    margin-right: 20px;
+}
+#refresh_btn{
+    float: left;
+    width: 20px;
+    height: 20px;
+    border: 0px;
+    cursor: pointer;
+    margin-left: 20px;
+}
+
+.dialog-container{
+    
+    background-image: url(/images/bgdialog.jpeg);
+    background-size:cover;
+    background-repeat: no-repeat; 
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    top: 0px;
+    z-index: 9999;
+    margin: auto;
+    border-radius: 10px;
+}
+
+.dialog-title{
+    font-size: 150%;
+    text-align: center;
+    margin-top: 5px;
+}
+
+#selectCityToAdd{
+    width: 150px;
+    height: 30px;
+    margin-top: 40px;
+    margin-left: 25px;
+    margin-right: auto;
+    border-radius: 10px;
+}
+
+#butAddCity{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100px;
+    height: 30px;
+    background-color: white;
+    border-radius: 10px;
+}
+
+#butAddCancel{
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 100px;
+    height: 30px;
+    background-color: #ffffff;
+    border-radius: 10px;
+}
+
+.container-card{
+    background-image: url("/images/rainImg.jpg");
+    background-size: cover;
+    margin-top: 20px;
+    position: relative;
+    width: 90%;
+    height: 300px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    top: 20px;
+    margin: auto;
+    border-radius: 10px;
+}
+
+.card-default{
+    
+    position: relative;
+    height: 90%;
+    width: 90%;
+    left: 5%;
+    right: 0px;
+    bottom: 0px;
+    top: 5%;
+
+}
+
+.image-weather{
+    width: 200px;
+    height: 100px;
+    
+}
+
+.weather-icon{
+    position: absolute;
+    top:0;
+	bottom:0;
+	left:0;
+	right:200px;
+	margin:auto;
+    width: 130px;
+    height: 130px;
+}
+
+.dialog-body{
+    opacity: 0.8;
+}
+
+.discription-weather{
+    position: absolute;
+    top:100px;
+	bottom:0;
+	left:200px;
+    right:0;
+    text-align: center;
+    color: #ffffff;
+	
+}
+
+.degree{
+    font-size: 50px;
+}
+
+.city{
+    font-size: 30px;
+}
+
+

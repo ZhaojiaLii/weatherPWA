@@ -1,0 +1,15 @@
+{
+    "name": "weather PWA",
+    "short_name":"wsk",
+    "lang": "en",
+    "scope": "/",
+    "icons":[{
+        "src": "/icon.png",
+        "sizes": "200x200",
+        "type":"image/png"
+    }],
+    "start_url": "/index.html",
+    "theme_color": "#fff",
+    "background_color": "#fff",
+    "display": "standalone"
+}

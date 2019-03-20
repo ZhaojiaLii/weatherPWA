@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <title>Weather PWA</title>
+  <link rel="stylesheet" type="text/css" href="styles/style.css">
+  <link rel="manifest" href="/manifest.json">
+  <!-- TODO add manifest here -->
+  
+</head>
+<body id="all">
+  <main id="main">
+      <header class="header">
+          <h1 class="header_title">Weather PWA</h1>
+          <input type="image" id="add_btn" src="/icons/addwhite.svg" class="header_btn"/>
+          <input type="image" id="refresh_btn" src="/icons/refreshwhite.svg" class="header_btn"/>
+        </header>
+      
+      
+        <div class="container-card" id="card" hidden>
+            <div class="card-default">
+                <div class="image-weather"><img class="weather-icon" id="weather-icon" src="/images/rain.png"></div>
+                <div class="discription-weather">
+                  <span class="degree" id="degree">20℃</span>
+                  <div class="city">
+                    <span class="city-name" id="city-name">Paris</span>
+                    <span>&nbsp;&nbsp;</span>
+                    <span class="weather" id="weather">few clouds</span>
+                  </div>
+                </div>
+            </div>
+        </div>
+  </main>
+
+  <div class="dialog-container" id="dialog" style="display: none;">
+    <div class="dialog" >
+      <div class="dialog-title" >Add new city</div>
+      <hr>
+      <div class="dialog-body">
+        <select id="selectCityToAdd">
+          <!-- Values map to Yahoo Weather API Where On Earth Identifiers (WOEIDs).
+               https://developer.yahoo.com/weather/documentation.html#req -->
+          <option value="2357536">Paris</option>
+          <option value="2367105">Jinzhou</option>
+          <option value="2379574">Tokyo</option>
+          <option value="2459115">New York</option>
+          <option value="2475687">Greater London</option>
+          <option value="2487956">Shanghai</option>
+        </select>
+      </div>
+      <div class="dialog-buttons">
+        <button id="butAddCity" class="button">Add</button>
+        <button id="butAddCancel" class="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <script src="scripts/app.js" async></script>
+
+</body>
+</html>
+
