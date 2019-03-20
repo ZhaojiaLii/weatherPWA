@@ -85,6 +85,16 @@ document.getElementById('butAddCancel').addEventListener('click',function(){
     hidedialog();
 });
 
+document.getElementById('confirm').addEventListener('click',function () {
+    var city = document.getElementById('search').value;
+    if (cities.includes(city)) {
+        handleJSON(city);
+    }else{
+        alert('wrong city');
+    }
+    
+})
+
 function showdialog() {
     var bg = document.getElementById('all');
     
@@ -127,7 +137,6 @@ function handleJSON(city) {
     
     addcard(city,Temp,description);
     
-
 }
 
 function addcard(city,temp,weather) {
@@ -353,10 +362,10 @@ var addlocalStorage = () => {
         },function(status){
             console.log('Something went wrong, status is ' + status);
         });
-    })  
-    
-    
+    })    
 }
+
+
 
 if('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js',{scope:'/'})
@@ -369,4 +378,45 @@ if('serviceWorker' in navigator) {
     		console.log("error in registration with "+ error)
     	});
 };
+
+if('serviceWorker' in navigator && 'PushManager' in window){
+    navigator.serviceWorker.register('./serviceWorker.js').then(function(registration){
+        return Promise.all([registration,askPermission()])
+    }).then(function(result){
+        console.log(result);
+    })
+}
+
+function askPermission(){
+    return new Promise(function(resolve , reject){
+        var permissionResult = Notification.requestPermission(function(result){
+            //old version
+            resolve(result);
+        })
+        if(permissionResult){
+            //new version
+            permissionResult.then(resolve , reject);
+        }
+    }).then(function(permissionResult){
+        if(permissionResult !== 'granted'){
+            throw new Error('We weren\'t granted permission.');
+        }
+    })
+}
+
+navigator.serviceWorker.ready.then(function (registration) {
+    var tag = "sample_sync";  // can be used connect with service-worker.js
+    registration.sync.register(tag).then(function () {
+        console.log(`background sync actived`);
+    }).catch(function (err) {
+        console.log(`background sync failed`, err);
+    });
+});
+
+if (`serviceWorker` in navigator && `SyncManager` in window) {
+    console.log('service worker and sync Manager are all registed');
+}else{
+    console.log('error in install service worker or sync manager');
+}
+
 

@@ -35,6 +35,7 @@ self.addEventListener('install', function(e) {
         self.skipWaiting()
       })
     );
+    
   });
   
   self.addEventListener('activate', function(e) {
@@ -66,4 +67,33 @@ self.addEventListener('install', function(e) {
           console.log("error in request");
         })
     );
+  });
+
+  self.addEventListener('sync',function (e) {
+    console.log(`service worker need to sync in background，tag: ${e.tag}`);
+    var init = {
+      method : `GET`
+    };
+    if (e.tag === `sample_sync`){
+      var request = new Request(`sync?name=AlienZHOU`, init);
+      e.waitUntil(
+          fetch(request).then(function (response) {
+              response.json().then(console.log.bind(console));
+              return response;
+          })
+      );
+    }
+  })
+
+  self.addEventListener('push',function (e) {
+    e.waitUntil(
+      self.registration.showNotification("Hey!")
+    )
+  });
+  self.addEventListener('notificationclick', event => {  
+    // Do something with the event  
+    event.notification.close();  
+  });
+  self.addEventListener('notificationclose', event => {  
+    // Do something with the event  
   });
