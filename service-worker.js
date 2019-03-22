@@ -4,28 +4,40 @@ var filesToCache = [
     'index.html',
     'favicon.ico',
     'scripts/app.js',
+    'scripts/DB.js',
+    'scripts/idb.js',
     'styles/style.css',
-    'images/afternoon.jpg',
-    'images/afternoon.jpeg',
+
     'images/bgdialog.jpeg',
-    'images/clear.png',
-    'images/cloudy.png',
-    'images/cloudyImg.jpeg',
-    'images/cloudyImg.jpg',
-    'images/morning.jpg',
-    'images/morning.gif',
-    'images/night.gif',
-    'images/rain.png',
-    'images/drizzle.jpg',
-    'images/rainImg.jpg',
-    'images/sunset.jpeg',
-    'images/sunnyImg.jpg',
+
+    'images/background/afternoon.jpeg',
+    'images/background/morning.jpg',
+    'images/background/night.gif',
+    'images/background/sunset.jpeg',
+
+    'images/weathericon/clear.png',
+    'images/weathericon/cloudy.png',
+    'images/weathericon/rain.png',
+    'images/weathericon/fog.png',
+    'images/weathericon/mist.png',
+    'images/weathericon/snow.png',
+    'images/weathericon/wind.png',
+
+    'images/weatherbackground/cloudyImg.jpg',
+    'images/weatherbackground/drizzleImg.jpg',
+    'images/weatherbackground/fogImg.jpeg',
+    'images/weatherbackground/mistImg.jpg',
+    'images/weatherbackground/rainImg.jpg',
+    'images/weatherbackground/stormImg.jpg',
+    'images/weatherbackground/sunnyImg.jpg',
+    'images/weatherbackground/windyImg.jpg',
+
     'icons/addwhite.svg',
     'icons/refreshwhite.svg'
 ];
 
 self.addEventListener('install', function(e) {
-    console.log('[Service Worker] Install');
+    //console.log('[Service Worker] Install');
     e.waitUntil(
       caches.open(cacheName)
       .then(function(cache) {
@@ -35,11 +47,11 @@ self.addEventListener('install', function(e) {
         self.skipWaiting()
       })
     );
-    
+
   });
   
   self.addEventListener('activate', function(e) {
-    console.log('[ServiceWorker] Activate');
+    //console.log('[ServiceWorker] Activate');
     e.waitUntil(
         caches.keys().then(function(keyList){
             return Promise.all(keyList.map(function(key){
@@ -54,7 +66,7 @@ self.addEventListener('install', function(e) {
   });
   
   self.addEventListener('fetch', function(e) {
-      console.log('[ServiceWorker] Fetch', e.request.url);
+      //console.log('[ServiceWorker] Fetch', e.request.url);
       e.respondWith(
         caches.match(e.request).then(function(response) {
           return response || fetch(e.request).then(function(response){

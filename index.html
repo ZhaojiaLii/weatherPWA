@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -16,18 +17,19 @@
       <header class="header">
           <h1 class="header_title">Weather PWA</h1>
           <input type="image" id="add_btn" src="/icons/addwhite.svg" class="header_btn"/>
-          <input type="image" id="refresh_btn" src="/icons/refreshwhite.svg" class="header_btn"/>
+          <input type="image" id="refresh_btn" src="/icons/refreshwhite.svg" class="header_btn" />
           <div class="search-city">
               <input type="text" class="search-box" id="search">
               <input type="button" class="confirm" id="confirm" value="add">
           </div>
+          <div class="update-time" id="update-time"></div>
           
         </header>
       
       
         <div class="container-card" id="card" hidden>
             <div class="card-default">
-                <div class="image-weather"><img class="weather-icon" id="weather-icon" src="/images/rain.png"></div>
+                <div class="image-weather"><img class="weather-icon" id="weather-icon" src="/images/weathericon/rain.png"></div>
                 <div class="discription-weather">
                   <span class="degree" id="degree">20℃</span>
                   <div class="city">
@@ -64,7 +66,9 @@
   </div>
 
   
-  <script src="scripts/app.js" async></script>
+  <script src="/scripts/app.js" async></script>
+  <script src="/scripts/DB.js"></script>
+  <script src="/scripts/idb.js"></script>
 
 </body>
 </html>

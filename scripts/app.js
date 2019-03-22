@@ -6,65 +6,66 @@ var card = document.getElementById('card');
 var description = "";
 var temp = 0;
 var cities = ['Paris','Jinzhou','Tokyo','New York','Greater London','Shanghai'];
-
+var alreadyadded =[];
+for(var i=0; i<window.localStorage.length;i++){
+    alreadyadded.push(window.localStorage.key(i));
+}
 var weathers = [
     
     {
         id:0,
         name:'Rain',
-        backgroundurl:'/images/rainImg.jpg',
-        iconurl:'/images/rain.png'
+        backgroundurl:'/images/weatherbackground/rainImg.jpg',
+        iconurl:'/images/weathericon/rain.png'
     },
     {
         id:1,
         name:'Clear',
-        backgroundurl:'/images/sunnyImg.jpg',
-        iconurl:'/images/clear.png'
+        backgroundurl:'/images/weatherbackground/sunnyImg.jpg',
+        iconurl:'/images/weathericon/clear.png'
     },
     {
         id:2,
         name:'Clouds',
-        backgroundurl:'/images/cloudyImg.jpg',
-        iconurl:'/images/cloudy.png'
+        backgroundurl:'/images/weatherbackground/cloudyImg.jpg',
+        iconurl:'/images/weathericon/cloudy.png'
     },
     {
         id:3,
-        name:'windy',
-        backgroundurl:'/images/windyImg.jpg',
-        iconurl:'/images/wind.png'
+        name:'Windy',
+        backgroundurl:'/images/weatherbackground/windyImg.jpg',
+        iconurl:'/images/weathericon/wind.png'
     },
     {
         id:4,
-        name:'storm',
-        backgroundurl:'/images/stormImg.jpg',
-        iconurl:'/images/thunderstorm.png'
+        name:'Storm',
+        backgroundurl:'/images/weatherbackground/stormImg.jpg',
+        iconurl:'/images/weathericon/thunderstorm.png'
     },
     {
         id:5,
         name:'Drizzle',
-        backgroundurl:'/images/drizzle.jpg',
-        iconurl:'/images/rain.png'
+        backgroundurl:'/images/weatherbackground/drizzleImg.jpg',
+        iconurl:'/images/weathericon/rain.png'
+    },
+    {
+        id:6,
+        name:'Mist',
+        backgroundurl:'/images/weatherbackground/mistImg.jpg',
+        iconurl:'/images/weathericon/mist.png'
+    },
+    {
+        id:7,
+        name:'Fog',
+        backgroundurl:'/images/weatherbackground/fogImg.jpeg',
+        iconurl:'/images/weathericon/fog.png'
     }
     ];
 
-var backgroundgif = [
-    {
-        id:0,
-        name:'night',
-        url:'/images/night.gif'
-    },
-    {
-        id:1,
-        name:'morning',
-        url:'/images/morning.gif'
-    }
-];
+settimebackground();  
+DBadd();  //get all the weather and saved in indexedDB
+refreshPage();  //make sure the added weather not disappear
 
-var values = [];
-var woeid = [];
-var cardlist = [];
-
-settimebackground();
 
 document.getElementById('add_btn').addEventListener('click',function(){
     showdialog();
@@ -72,7 +73,8 @@ document.getElementById('add_btn').addEventListener('click',function(){
 });
 
 document.getElementById('refresh_btn').addEventListener('click',function(){
-    addlocalStorage();
+    DBrefresh();
+    CARDrefresh();
 });
 
 document.getElementById('butAddCity').addEventListener('click',function(){
@@ -125,21 +127,56 @@ function getSelected() {
 
 function handleJSON(city) {
 
-    var get = window.localStorage.getItem(city);
-    var json = JSON.parse(get);
-    temp = (json.main.temp-273.15).toString();
-    if (temp.includes('.')) {
-        var Temp = temp.slice(0,temp.indexOf('.'))+"℃";
-    }else{
-        var Temp = temp.slice(0,temp.length)+"℃";
+    var request = indexedDB.open(DB_name,DB_version);
+    request.onsuccess = function (event) {
+        db = this.result;
+        var tx = db.transaction(DB_store_name_1,'readwrite');
+        store = tx.objectStore(DB_store_name_1);
+        var today = new Date();
+        var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+        var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+        var updatetime = date+" "+time;  
+        var req = store.get(city);
+        req.onerror = function (event) {
+            console.log(error);
+        } 
+        req.onsuccess = function (event) {
+            var targetcity = req.result.city;
+            var targettemp = req.result.temp;
+            var targetdescription = req.result.description; 
+            var jsonstr = JSON.stringify(req.result);
+            window.localStorage.setItem(targetcity,jsonstr);
+            console.log(req.result," object got.");
+            if (!alreadyadded.includes(targetcity)) {
+                addcard(targetcity,targettemp,targetdescription);
+                alreadyadded.push(targetcity);
+            }else{
+                alert("city already has been added. cities: "+alreadyadded);
+            }
+            
+        }
     }
-    description = json.weather[0].main;
     
-    addcard(city,Temp,description);
+}
+
+function refreshPage() {
+    if (window.localStorage.length===0) {
+        return
+    }else{
+        var showcity = [];
+        for (let i = 0; i < window.localStorage.length; i++) {
+            var element = window.localStorage.getItem(window.localStorage.key(i));
+            var json = JSON.parse(element);
+            addcard(json.city,json.temp,json.description);
+            showcity.push(json.city);
+        }
+        console.log(showcity + " is reloaded.");
+    }
     
 }
 
 function addcard(city,temp,weather) {
+
     var obj = {};
     var value;
     weathers.forEach(function (v,i) {
@@ -281,23 +318,23 @@ function settimebackground() {
 
     if (hour<8) {
         state = 'night';
-        url = '/images/night.gif';
+        url = '/images/background/night.gif';
         console.log(hour+' hours at '+state)
     }else if (hour<12) {
         state = 'morning';
-        url = '/images/morning.jpg';
+        url = '/images/background/morning.jpg';
         console.log(hour+' hours in the '+state)
     }else if (hour<17){
         state = 'afternoon';
-        url = '/images/afternoon.jpeg';
+        url = '/images/background/afternoon.jpeg';
         console.log(hour+' hours in the '+state)
     }else if (hour<20) {
         state = 'sunset';
-        url = '/images/sunset.jpeg';
+        url = '/images/background/sunset.jpeg';
     }
     else if (hour<24) {
         state = 'night';
-        url = '/images/night.gif';
+        url = '/images/background/night.gif';
         console.log(hour+' hours at '+state)
     }
     var getbackground = document.getElementById('all');
@@ -350,22 +387,22 @@ var getJSON = function (url) {
     });
 };
 
-var url ;
-var city ;
-var data ;
-var addlocalStorage = () => {
-    cities.forEach(function (city) {
-        url = 'http://api.openweathermap.org/data/2.5/weather?q='+city+'&APPID='+APIkey;
-        getJSON(url).then((data) => {   
-            var jsonstr = JSON.stringify(data); 
-            window.localStorage.setItem(data.name,jsonstr);
-        },function(status){
-            console.log('Something went wrong, status is ' + status);
+// ask permission to push notification to user
+function askPermission() {
+    return new Promise(function (resolve, reject) {
+        var permissionResult = Notification.requestPermission(function (result) {
+            resolve(result);
         });
-    })    
+  
+        if (permissionResult) {
+            permissionResult.then(resolve, reject);
+        }
+    }).then(function (permissionResult) {
+        if (permissionResult !== 'granted') {
+            throw new Error('We weren\'t granted permission.');
+        }
+    });
 }
-
-
 
 if('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js',{scope:'/'})
@@ -379,30 +416,6 @@ if('serviceWorker' in navigator) {
     	});
 };
 
-if('serviceWorker' in navigator && 'PushManager' in window){
-    navigator.serviceWorker.register('./serviceWorker.js').then(function(registration){
-        return Promise.all([registration,askPermission()])
-    }).then(function(result){
-        console.log(result);
-    })
-}
-
-function askPermission(){
-    return new Promise(function(resolve , reject){
-        var permissionResult = Notification.requestPermission(function(result){
-            //old version
-            resolve(result);
-        })
-        if(permissionResult){
-            //new version
-            permissionResult.then(resolve , reject);
-        }
-    }).then(function(permissionResult){
-        if(permissionResult !== 'granted'){
-            throw new Error('We weren\'t granted permission.');
-        }
-    })
-}
 
 navigator.serviceWorker.ready.then(function (registration) {
     var tag = "sample_sync";  // can be used connect with service-worker.js
@@ -414,9 +427,16 @@ navigator.serviceWorker.ready.then(function (registration) {
 });
 
 if (`serviceWorker` in navigator && `SyncManager` in window) {
-    console.log('service worker and sync Manager are all registed');
+    //console.log('service worker and sync Manager are all registed');
 }else{
     console.log('error in install service worker or sync manager');
 }
+
+
+
+
+
+
+
 
 

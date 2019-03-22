@@ -146,7 +146,7 @@
 }
 
 .container-card{
-    background-image: url("/images/rainImg.jpg");
+    background-image: url("/images/weatherbackground/rainImg.jpg");
     background-size: cover;
     margin-top: 20px;
     position: relative;
