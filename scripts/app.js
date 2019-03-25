@@ -1,6 +1,7 @@
 'use strict'
 
 var APIkey = '186bd32bbcadf6c77e6c370efba0b47d';
+var testurl = 'http://localhost:3000/sync';
 var windowDialog = document.getElementById('dialog');
 var card = document.getElementById('card');
 var description = "";
@@ -387,6 +388,27 @@ var getJSON = function (url) {
     });
 };
 
+
+var testGET = function (testurl) {
+    var type = 'get';  
+    return new Promise(function (resolve,reject) {
+        var test = new XMLHttpRequest();
+        test.open(type,testurl,true);
+        test.responseType = 'json';
+        test.onload = function () {
+            var status = test.status;
+            if (status == 200) {
+                resolve(test.response);
+            } else {
+                reject(status);
+            }
+        };
+        test.send();
+    })
+}
+
+
+
 // ask permission to push notification to user
 function askPermission() {
     return new Promise(function (resolve, reject) {
@@ -417,20 +439,33 @@ if('serviceWorker' in navigator) {
 };
 
 
-navigator.serviceWorker.ready.then(function (registration) {
-    var tag = "sample_sync";  // can be used connect with service-worker.js
-    registration.sync.register(tag).then(function () {
-        console.log(`background sync actived`);
-    }).catch(function (err) {
-        console.log(`background sync failed`, err);
-    });
-});
-
 if (`serviceWorker` in navigator && `SyncManager` in window) {
-    //console.log('service worker and sync Manager are all registed');
+    navigator.serviceWorker.ready.then(function (registration) {
+        var tag = "sample_sync";  // can be used connect with service-worker.js
+        document.getElementById('refresh_btn').addEventListener('click',function() {
+            console.log('background sync start');
+            if (registration.sync) {
+                registration.sync.register(tag).then(function () {
+                    testGET(testurl).then((data)=>{
+        console.log(data);
+    },function (status) {
+        console.log(status);
+    })
+                    console.log(`background sync actived`);
+                }).catch(function (err) {
+                    console.log(`background sync failed`, err);
+                });
+            }
+        })
+        
+    })
 }else{
     console.log('error in install service worker or sync manager');
 }
+
+window.addEventListener('offline', function() {
+    alert('You have lost internet access!');
+});
 
 
 

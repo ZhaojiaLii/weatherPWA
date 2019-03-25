@@ -1,5 +1,6 @@
-var cacheName = "weatherPWA"
-var filesToCache = [
+
+var cacheName = "staticCache"
+var staticCache = [
     '/',
     'index.html',
     'favicon.ico',
@@ -42,7 +43,7 @@ self.addEventListener('install', function(e) {
       caches.open(cacheName)
       .then(function(cache) {
           console.log('[Service Worker] Caching all: app shell and content');
-          return cache.addAll(filesToCache);})
+          return cache.addAll(staticCache);})
       .then(function(){
         self.skipWaiting()
       })
@@ -65,12 +66,16 @@ self.addEventListener('install', function(e) {
     return self.clients.claim();
   });
   
+  var requestCache = 'requestCache'
   self.addEventListener('fetch', function(e) {
       //console.log('[ServiceWorker] Fetch', e.request.url);
+      
       e.respondWith(
         caches.match(e.request).then(function(response) {
-          return response || fetch(e.request).then(function(response){
-            return caches.open(cacheName).then(function(cache){
+          return response || fetch(e.request)
+          .then(function(response){
+            return caches.open(requestCache)
+            .then(function(cache){
               cache.put(e.request,response.clone());
               return response;
             });
@@ -79,21 +84,23 @@ self.addEventListener('install', function(e) {
           console.log("error in request");
         })
     );
+      
   });
 
   self.addEventListener('sync',function (e) {
     console.log(`service worker need to sync in background，tag: ${e.tag}`);
-    var init = {
-      method : `GET`
-    };
     if (e.tag === `sample_sync`){
-      var request = new Request(`sync?name=AlienZHOU`, init);
+      console.log("syncing new request...");
+      // const url = 'https://localhost:3000/sync';
+      var request = new Request('http://localhost:3000/sync', {method:'GET'});
       e.waitUntil(
           fetch(request).then(function (response) {
               response.json().then(console.log.bind(console));
               return response;
           })
       );
+    }else{
+      console.log("Cannot access to http://localhost:3000/sync");
     }
   })
 
