@@ -1,5 +1,5 @@
 'use strict'
-
+var Privatekey = 'TIrMnK-r--TE7Tnwf-x4JfKwuFKz5tmQuDRWYmuwbhY';
 var APIkey = '186bd32bbcadf6c77e6c370efba0b47d';
 var testurl = 'http://localhost:3000/sync';
 var windowDialog = document.getElementById('dialog');
@@ -74,8 +74,8 @@ document.getElementById('add_btn').addEventListener('click',function(){
 });
 
 document.getElementById('refresh_btn').addEventListener('click',function(){
-    DBrefresh();
-    CARDrefresh();
+    // DBrefresh();
+    // CARDrefresh();
 });
 
 document.getElementById('butAddCity').addEventListener('click',function(){
@@ -427,45 +427,120 @@ function askPermission() {
 }
 
 if('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js',{scope:'/'})
+    navigator.serviceWorker.register('./service-worker.js',{scope:'/'})
     .then(  // promise resolve
     	function(reg){
-    		console.log("Successfully registed serviceWorker. Scope is: "+ reg.scope)
+            sync();
+            console.log("Successfully registed serviceWorker. Scope is: "+ reg.scope)
     	})
     .catch(  // promise rejected
     	function(error){
     		console.log("error in registration with "+ error)
     	});
 };
-
-
-if (`serviceWorker` in navigator && `SyncManager` in window) {
+function sync() {
+if('serviceWorker' in navigator && 'SyncManager' in window){
     navigator.serviceWorker.ready.then(function (registration) {
-        var tag = "sample_sync";  // can be used connect with service-worker.js
-        document.getElementById('refresh_btn').addEventListener('click',function() {
-            console.log('background sync start');
-            if (registration.sync) {
-                registration.sync.register(tag).then(function () {
-                    testGET(testurl).then((data)=>{
-        console.log(data);
-    },function (status) {
-        console.log(status);
+        var tag = "sync-test"; 
+         
+        // document.getElementById('refresh_btn').addEventListener('click', ()=> {
+        //     //console.log('background sync start');
+            
+        // })
+        if (registration.sync) {
+            registration.sync.register(tag).then(function () {
+                console.log(`background sync actived`);
+            }).catch(function (err) {
+                console.log(`background sync failed`, err);
+            });
+        }
     })
-                    console.log(`background sync actived`);
-                }).catch(function (err) {
-                    console.log(`background sync failed`, err);
-                });
-            }
-        })
-        
-    })
-}else{
-    console.log('error in install service worker or sync manager');
+}
+setTimeout(sync,5000);
 }
 
-window.addEventListener('offline', function() {
-    alert('You have lost internet access!');
-});
+    navigator.serviceWorker.ready.then(function(registration){
+        var tag = 'sample_sync_event';
+        document.getElementById('confirm').addEventListener('click', function(e){
+            registration.sync.register(tag).then(function(){
+                console.log(`后台同步已触发：${tag}`);
+    
+                var inputValue = document.getElementById('search').value;
+                var msg = JSON.stringify({ type : 'bgsync' , msg : {name : inputValue}});
+                navigator.serviceWorker.controller.postMessage(msg);
+            }).catch(function(err){
+                console.log(`后台同步触发失败：${err}`)
+            })
+            
+        })
+    })
+
+    
+
+
+
+// if('serviceWorker' in navigator && 'PushManager' in window){
+//     var Publishkey = 'BPwgIYTh9n2u8wpAf-_VzZ4dwaBY8UwfRjWZzcoX6RN7y5xD0RL9U4YDCdeoO3T8nJcWsQdvNirT11xJwPljAyk';
+
+//     navigator.serviceWorker.register('./serviceWorker.js').then(function(registration){
+//         return Promise.all([
+//             registration,
+//             askPermission()
+//         ])
+//     }).then(function(result){
+//         var registration = result[0];
+//         return subscribeUserToPush(registration,publicKey);
+//     })
+// }
+
+function setRegular(targetHour) {
+    var timeInterval,nowTime,nowSeconds,targetSeconds
+    nowTime = new Date();
+    nowSeconds = nowTime.getHours() * 3600 + nowTime.getMinutes() * 60 + nowTime.getSeconds()
+    targetSeconds =  targetHour * 3600
+    timeInterval = targetSeconds > nowSeconds ? targetSeconds - nowSeconds: targetSeconds + 24 * 3600 - nowSeconds 
+    setTimeout(getProductFileList,timeInterval * 1000)
+}
+
+function askPermission(){
+    return new Promise(function(resolve , reject){
+        var permissionResult = Notification.requestPermission(function(result){
+            //old version
+            resolve(result);
+        })
+        if(permissionResult){
+            //new version
+            permissionResult.then(resolve , reject);
+        }
+    }).then(function(permissionResult){
+        if(permissionResult !== 'granted'){
+            throw new Error('We weren\'t granted permission.');
+        }
+    })
+}
+//publish key is base64 type, need to be transfered to Uint8Array type
+// function subscribeUserToPush(registration , publicKey){
+//     var subscribeOptions = {
+//         userVisibleOnly : true,
+//         applicationServerKey : window.urlBase64ToUint8Array(publicKey)
+//     };
+//     return registration.pushManager.subscribe(subscribeOptions).then(function(pushSubscription){
+//         console.log('pushscription' ,pushSubscription)
+//         return pushSubscription;
+//     })
+// }
+
+window.addEventListener('load',function () {
+    function updateOnlineStatus(event) {
+      if (navigator.onLine) {
+        console.log('device is now online');
+      } else {
+        console.log('device is now offline');
+      }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+  });
 
 
 

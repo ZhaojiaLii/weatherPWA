@@ -1,5 +1,9 @@
 var express=require('express');
 var app =express();
+var key = {
+    PublicKey:"BPwgIYTh9n2u8wpAf-_VzZ4dwaBY8UwfRjWZzcoX6RN7y5xD0RL9U4YDCdeoO3T8nJcWsQdvNirT11xJwPljAyk",
+    PrivateKey:"TIrMnK-r--TE7Tnwf-x4JfKwuFKz5tmQuDRWYmuwbhY"
+}
  
 // configure the server access
 app.all('*', function(req, res, next) {
@@ -26,6 +30,8 @@ app.get('/sync',function(req,res){
     res.status(200),
     res.json(questions)
 });
+
+
  
 // port of ther server : 3000
  

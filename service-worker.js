@@ -3,6 +3,7 @@ var cacheName = "staticCache"
 var staticCache = [
     '/',
     'index.html',
+    'manifest.json',
     'favicon.ico',
     'scripts/app.js',
     'scripts/DB.js',
@@ -34,7 +35,8 @@ var staticCache = [
     'images/weatherbackground/windyImg.jpg',
 
     'icons/addwhite.svg',
-    'icons/refreshwhite.svg'
+    'icons/refreshwhite.svg',
+    'icon.png'
 ];
 
 self.addEventListener('install', function(e) {
@@ -51,7 +53,7 @@ self.addEventListener('install', function(e) {
 
   });
   
-  self.addEventListener('activate', function(e) {
+self.addEventListener('activate', function(e) {
     //console.log('[ServiceWorker] Activate');
     e.waitUntil(
         caches.keys().then(function(keyList){
@@ -65,54 +67,107 @@ self.addEventListener('install', function(e) {
         );
     return self.clients.claim();
   });
+
+
+
   
-  var requestCache = 'requestCache'
-  self.addEventListener('fetch', function(e) {
+var requestCache = 'requestCache'
+
+self.addEventListener('fetch', function(e) {
       //console.log('[ServiceWorker] Fetch', e.request.url);
-      
       e.respondWith(
-        caches.match(e.request).then(function(response) {
-          return response || fetch(e.request)
+        caches.match(e.request).then(function(cache) {
+          return cache || fetch(e.request)
           .then(function(response){
             return caches.open(requestCache)
             .then(function(cache){
-              cache.put(e.request,response.clone());
+              cache.put(e.request.url,response.clone());
               return response;
             });
           });
         }).catch(function(){
-          console.log("error in request");
+          console.log("error in fetch request");
         })
     );
-      
+
+    
+    // caches.open(requestCache).then(function (cache) {
+    //   return fetch(e.request).then(function (response) {
+    //     console.log(response);
+    //     if (response.statusText !== 'Not Found') {
+    //       cache.put(e.request.url,response.clone())
+    //     }
+    //     return response;
+    //   })
+    // })    
   });
 
   self.addEventListener('sync',function (e) {
-    console.log(`service worker need to sync in background，tag: ${e.tag}`);
-    if (e.tag === `sample_sync`){
+    console.log('service worker need to sync in background...',e);
+    if (e.tag === 'sync-test'){
       console.log("syncing new request...");
       // const url = 'https://localhost:3000/sync';
-      var request = new Request('http://localhost:3000/sync', {method:'GET'});
+      init = {
+        method:'GET'
+      }
+      var request = new Request('http://localhost:3000/sync', init);
       e.waitUntil(
           fetch(request).then(function (response) {
-              response.json().then(console.log.bind(console));
-              return response;
+              return response.json();
           })
       );
-    }else{
-      console.log("Cannot access to http://localhost:3000/sync");
+      console.log("sync finished!")
+    }else if(e.tag === 'sample_sync_event'){
+        console.log('2222222222222');
     }
   })
 
-  self.addEventListener('push',function (e) {
+  self.addEventListener('message' , function(e){
+    var data = JSON.parse(e.data),
+        type = data.type,
+        msg = data.msg;
+
+    console.log(`service worker收到消息 type: ${type} ; msg : ${JSON.stringify(msg)}`)
+
+    dealData.trigger(type , msg);
+})
+
+class DealData{
+  constructor(){
+      this.tagDatas = {};
+  }
+  //save tag and callback function
+  once(tag , callback){
+      this.tagDatas[tag] || (this.tagDatas[tag] = []);
+      this.tagDatas[tag].push(callback);
+  }
+  
+  //after received data, call callback function
+  trigger(tag , data){
+      this.tagDatas[tag] = this.tagDatas[tag] || [];
+      let tagCallback ;
+      while(tagCallback = this.tagDatas[tag].shift()){
+          tagCallback(data)
+      }
+  }
+}
+const dealData = new DealData();
+
+
+
+
+
+self.addEventListener('push',function (e) {
+  var data = e.data;
     e.waitUntil(
       self.registration.showNotification("Hey!")
     )
   });
-  self.addEventListener('notificationclick', event => {  
+self.addEventListener('notificationclick', event => {  
     // Do something with the event  
     event.notification.close();  
   });
-  self.addEventListener('notificationclose', event => {  
+self.addEventListener('notificationclose', event => {  
     // Do something with the event  
   });
+
