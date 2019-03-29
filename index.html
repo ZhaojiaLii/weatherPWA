@@ -18,10 +18,12 @@
           <h1 class="header_title">Weather PWA</h1>
           <input type="image" id="add_btn" src="/icons/addwhite.svg" class="header_btn"/>
           <input type="image" id="refresh_btn" src="/icons/refreshwhite.svg" class="header_btn" />
+          <input type="image" id="remove_btn" src="/icons/remove.svg" class="header_btn" />
           <div class="search-city">
-              <input type="text" class="search-box" id="search">
+              <input type="text" class="search-box" autocomplete="off" id="search" onkeyup="showHint(this.value)">
               <input type="button" class="confirm" id="confirm" value="add">
           </div>
+          <div class="hintShow"></div>
           <div class="update-time" id="update-time"></div> 
         </header>
       
@@ -38,7 +40,17 @@
                   </div>
                 </div>
             </div>
-        </div>
+        </div>  
+        <div class="remove-menu">
+            <div class="card">
+                <ul class="remove" style="list-style:none;">
+                  <style>
+                    .remove{width: 100px;}
+                    </style>
+                    
+                </ul>
+            </div>
+        </div>  
   </main>
 
   <div class="dialog-container" id="dialog" style="display: none;">

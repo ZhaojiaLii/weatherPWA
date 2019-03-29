@@ -9,6 +9,7 @@ var staticCache = [
     'scripts/DB.js',
     'scripts/idb.js',
     'styles/style.css',
+    'json/city.list.json',
 
     'images/bgdialog.jpeg',
 
@@ -71,7 +72,8 @@ self.addEventListener('activate', function(e) {
 
 
   
-var requestCache = 'requestCache'
+var requestCache = 'requestCache';
+var cacheFetchUrls = ['/sync'];
 
 self.addEventListener('fetch', function(e) {
       //console.log('[ServiceWorker] Fetch', e.request.url);
@@ -90,6 +92,20 @@ self.addEventListener('fetch', function(e) {
         })
     );
 
+    var needCache = cacheFetchUrls.some(function (url) {
+      return e.request.url.indexOf(url) > 1;
+    })
+
+    if (needCache) {
+      caches.open(requestCache).then(function (cache) {
+        return fetch(e.request).then(function (response) {
+          if(response.statusText !== 'Not Found'){
+            cache.put(e.request.url,response.clone())
+            }
+            return response;
+        })
+      })
+    }
     
     // caches.open(requestCache).then(function (cache) {
     //   return fetch(e.request).then(function (response) {
@@ -110,7 +126,7 @@ self.addEventListener('fetch', function(e) {
       init = {
         method:'GET'
       }
-      var request = new Request('http://localhost:3000/sync', init);
+      var request = new Request('/sync', init);
       e.waitUntil(
           fetch(request).then(function (response) {
               return response.json();
@@ -155,14 +171,19 @@ const dealData = new DealData();
 
 
 
-
-
 self.addEventListener('push',function (e) {
+  console.log("获得push请求");
   var data = e.data;
-    e.waitUntil(
-      self.registration.showNotification("Hey!")
-    )
+    if (e.data) {
+        data = data.json();
+        console.log('push的数据为：', data);
+        self.registration.showNotification(data.text);        
+    } 
+    else {
+        console.log('push没有任何数据');
+    }
   });
+
 self.addEventListener('notificationclick', event => {  
     // Do something with the event  
     event.notification.close();  

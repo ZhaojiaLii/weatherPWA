@@ -74,8 +74,9 @@ document.getElementById('add_btn').addEventListener('click',function(){
 });
 
 document.getElementById('refresh_btn').addEventListener('click',function(){
-    // DBrefresh();
-    // CARDrefresh();
+    //DBrefresh();
+    //CARDrefresh();
+    locateME();
 });
 
 document.getElementById('butAddCity').addEventListener('click',function(){
@@ -89,14 +90,50 @@ document.getElementById('butAddCancel').addEventListener('click',function(){
 });
 
 document.getElementById('confirm').addEventListener('click',function () {
-    var city = document.getElementById('search').value;
-    if (cities.includes(city)) {
-        handleJSON(city);
+    var getInput = $('.search-box').val();
+    if (getInput!=="") {
+        getInput = getInput.slice(0,1).toUpperCase()+getInput.slice(1).toLowerCase();
+        readJSONfile("/json/city.list.json", function(text){
+            var data = JSON.parse(text);
+            //console.log(getCityIDbyName(getInput,data));
+            var id = getCityIDbyName(getInput,data);
+            if (id !== 0) {
+                searchADD(id);
+            }
+            
+        });
     }else{
-        alert('wrong city');
-    }
+        alert("empty city input")
+    }  
+    $('.search-box').val("");
+    $('.hint-Selector').hide();
+    $('.hint').remove();
     
 })
+
+$('#remove_btn').click(function () {
+    showRemove();
+})
+
+function searchADD(id) {
+    var url = 'http://api.openweathermap.org/data/2.5/weather?id='+id+'&APPID='+APIkey;
+    getJSON(url).then((data)=>{
+        var city = data.name;
+        var temp = (data.main.temp-273.15).toString();
+        if (temp.includes('.')) {
+            var Temp = temp.slice(0,temp.indexOf('.')+2)+"℃";
+        }else{
+            var Temp = temp.slice(0,temp.length)+"℃";
+        }
+        var des = data.weather[0].main;
+        console.log(des);
+        addcard(city,Temp,des);
+        var jsonstr = JSON.stringify(data)
+        window.localStorage.setItem(city,jsonstr);
+    },function (status) {
+        console.log('Something went wrong, status is ' + status);
+    })
+}
 
 function showdialog() {
     var bg = document.getElementById('all');
@@ -168,8 +205,14 @@ function refreshPage() {
         for (let i = 0; i < window.localStorage.length; i++) {
             var element = window.localStorage.getItem(window.localStorage.key(i));
             var json = JSON.parse(element);
-            addcard(json.city,json.temp,json.description);
-            showcity.push(json.city);
+            var temp = (json.main.temp-273.15).toString();
+            if (temp.includes('.')) {
+                var Temp = temp.slice(0,temp.indexOf('.')+2)+"℃";
+            }else{
+                var Temp = temp.slice(0,temp.length)+"℃";
+            }
+            addcard(json.name,Temp,json.weather[0].main);
+            showcity.push(json.name);
         }
         console.log(showcity + " is reloaded.");
     }
@@ -180,14 +223,12 @@ function addcard(city,temp,weather) {
 
     var obj = {};
     var value;
-    weathers.forEach(function (v,i) {
-        obj[v.id]=v;
-    });
     weathers.forEach(function (element) {
-        if (element.name == weather) {
-            value = element;
+        if (element.name === weather) {
+            value = element
         }
     });
+    
     
     var createCard = {
 
@@ -195,9 +236,10 @@ function addcard(city,temp,weather) {
 
             var div = document.createElement('div');
             div.className = "container-card";
-            div.id = "card";
+            div.id = city;
             div.style.position = "relative";
             div.style.marginTop = "20px";
+            
             div.style.backgroundImage = "url('"+value.backgroundurl+"')";
             div.style.boxShadow = '5px 5px 5px';
 
@@ -388,26 +430,147 @@ var getJSON = function (url) {
     });
 };
 
+function readJSONfile(file,callback) {
+    var rawFile = new XMLHttpRequest();
+    rawFile.overrideMimeType("application/json");
+    rawFile.open("GET",file,true);
+    rawFile.onreadystatechange = function () {
+        if (rawFile.readyState === 4 && rawFile.status == "200") {
+            callback(rawFile.responseText);
+        }
+    }
+    rawFile.send(null);
+}
+let alreadyAdded = [];
+function getCityIDbyName(name,data) {
+    var id = 0;
+    var country = "";
+    var lon = 0;
+    var lat = 0;
+    data.forEach(function (element) {
+        if (element.name===name) {
+            id = element.id;
+            country = element.country;
+            lon = element.coord.lon;
+            lat = element.coord.lat;
+            var msg = "city: "+name+",id: "+id+",country: "+country+",coord: "+lon+" "+lat;
+            console.log(msg);
+            alreadyAdded.push(name);
+            return 
+        }
+    });
+    if (id === 0) {
+        console.log("city doesn't exist...");
+        alert("city doesn't exist...");
+        return id;
+    }else{
+        return id;
+    }
+    
+}
+$('.hintShow').append('<select class="hint-Selector" onclick="getClick()"></select>');
+$('.hint-Selector').hide();
+$('.hintShow').addClass("hintShow");
+$('.hint-Selector').addClass("hint-Selector");
 
-var testGET = function (testurl) {
-    var type = 'get';  
-    return new Promise(function (resolve,reject) {
-        var test = new XMLHttpRequest();
-        test.open(type,testurl,true);
-        test.responseType = 'json';
-        test.onload = function () {
-            var status = test.status;
-            if (status == 200) {
-                resolve(test.response);
-            } else {
-                reject(status);
+function showHint(string) {
+    
+    string = string.slice(0,1).toUpperCase()+string.slice(1).toLowerCase();
+    //console.log(string);
+    if (string === "") {
+        $('.hint').remove();
+        $('.hint-Selector').hide();
+    }else{
+        readJSONfile("/json/city.list.json", function(text){
+            var data = JSON.parse(text);
+            
+            var cityFind = [];
+            var cityID = [];
+            data.forEach(function (element) {
+                if (element.name.includes(string)) {
+                    cityFind.push(element.name+" "+element.country)
+                    cityID.push(element.id);
+                }
+            })
+            var showCity = [];
+            var showID = [];
+            if (cityFind.length > 6) {
+                
+                for (let i = 0; i < 6; i++) {
+                    var random = [];
+                    var num = Math.floor(Math.random()*cityFind.length);
+                    if (random.includes(num)) {
+                        num = Math.floor(Math.random()*cityFind.length);
+                    }else{
+
+                    }
+                    random.push(num);
+                    const element1 = cityFind[num];
+                    const element2 = cityID[num];
+                    showCity.push(element1);
+                    showID.push(element2);
+                }
+            }else{
+                showCity = cityFind;
+                showID = cityID;
             }
-        };
-        test.send();
-    })
+
+            var hint = $('.hint')
+            if (hint.length!==0) {
+                $('.hint').remove();
+            }
+
+            $('.hintShow').append('<p class="hint">'+showCity+'</p>');
+            $('.hint').css("color","white");
+
+            var getOption = $('.hint-Selector option');
+            if (getOption.length !==0) {
+                $('.hint-Selector').show();
+                $('.hint-Selector').empty();
+            }
+            for (let i = 0; i < showCity.length; i++) {
+                const element1 = showCity[i];
+                const element2 = showID[i];
+                $('.hint-Selector').append('<option value="'+element2+'">'+element1+'</option>');    
+            }
+        });
+    }  
 }
 
+// get selected option of city
+function getClick() {
+    var options = $('.hint-Selector option:selected');
+    var id = options.val();
+    var city = options.text();
+    console.log(city+" selected, ID: "+id);
+    searchADD(id);
+    $('.hint-Selector').hide();
+    $('.hint').remove();
+    $('.search-box').val("");
+}
 
+$('.remove-menu').hide();
+function showRemove() {
+    for(var i=0; i<window.localStorage.length;i++){
+        var city = window.localStorage.key(i);
+        $('.remove').append('<li class="ops"><input type="button"  class="op" value='+city+' onclick="Delete(this.value)"></input></li>');
+    }
+    
+    $('.ops').css("background-color","white");
+    $('.op').css("width","150px");
+    $('.card').css("position","relative");
+    $('.card').css("float","right");
+    $('.card').css("padding-right","50px");
+
+    $('.card').css("z-index","9999");
+    $('.remove-menu').show();
+}
+
+function Delete(name) {
+    $('.container-card#'+name).remove();
+    $('.op[value='+name+']').remove();
+    window.localStorage.removeItem(name);
+}
 
 // ask permission to push notification to user
 function askPermission() {
@@ -427,81 +590,79 @@ function askPermission() {
 }
 
 if('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js',{scope:'/'})
+    navigator.serviceWorker.register('/service-worker.js',{scope:'/'})
     .then(  // promise resolve
     	function(reg){
-            sync();
-            console.log("Successfully registed serviceWorker. Scope is: "+ reg.scope)
+            console.log("Successfully registed serviceWorker. Scope is: "+ reg.scope);
+            askPermission();
     	})
     .catch(  // promise rejected
     	function(error){
     		console.log("error in registration with "+ error)
     	});
 };
-function sync() {
+
 if('serviceWorker' in navigator && 'SyncManager' in window){
     navigator.serviceWorker.ready.then(function (registration) {
         var tag = "sync-test"; 
          
-        // document.getElementById('refresh_btn').addEventListener('click', ()=> {
-        //     //console.log('background sync start');
-            
-        // })
-        if (registration.sync) {
+        document.getElementById('confirm').addEventListener('click', ()=> {
+            //console.log('background sync start');
+            if (registration.sync) {
             registration.sync.register(tag).then(function () {
                 console.log(`background sync actived`);
             }).catch(function (err) {
                 console.log(`background sync failed`, err);
             });
         }
+        })
+        
     })
-}
-setTimeout(sync,5000);
 }
 
-    navigator.serviceWorker.ready.then(function(registration){
-        var tag = 'sample_sync_event';
-        document.getElementById('confirm').addEventListener('click', function(e){
-            registration.sync.register(tag).then(function(){
-                console.log(`后台同步已触发：${tag}`);
-    
-                var inputValue = document.getElementById('search').value;
-                var msg = JSON.stringify({ type : 'bgsync' , msg : {name : inputValue}});
-                navigator.serviceWorker.controller.postMessage(msg);
-            }).catch(function(err){
-                console.log(`后台同步触发失败：${err}`)
-            })
-            
-        })
-    })
+
+// navigator.serviceWorker.ready.then(function(registration){
+//     var tag = 'sample_sync_event';
+//     document.getElementById('confirm').addEventListener('click', function(e){
+//         registration.sync.register(tag).then(function(){
+//             console.log(`后台同步已触发：${tag}`);
+
+//             var inputValue = document.getElementById('search').value;
+//             var msg = JSON.stringify({ type : 'bgsync' , msg : {name : inputValue}});
+//             navigator.serviceWorker.controller.postMessage(msg);
+//         }).catch(function(err){
+//             console.log(`后台同步触发失败：${err}`)
+//         })
+        
+//     })
+// })
 
     
 
 
 
 // if('serviceWorker' in navigator && 'PushManager' in window){
-//     var Publishkey = 'BPwgIYTh9n2u8wpAf-_VzZ4dwaBY8UwfRjWZzcoX6RN7y5xD0RL9U4YDCdeoO3T8nJcWsQdvNirT11xJwPljAyk';
-
-//     navigator.serviceWorker.register('./serviceWorker.js').then(function(registration){
-//         return Promise.all([
-//             registration,
-//             askPermission()
-//         ])
-//     }).then(function(result){
-//         var registration = result[0];
-//         return subscribeUserToPush(registration,publicKey);
-//     })
+//     navigator.serviceWorker.register('/service-worker.js').then(function(registration){
+//         console.log("this is notification part.")
+//         displayNotification();
+//     }).catch(error => {
+//         console.log(error);
+//       });
 // }
 
-function setRegular(targetHour) {
-    var timeInterval,nowTime,nowSeconds,targetSeconds
-    nowTime = new Date();
-    nowSeconds = nowTime.getHours() * 3600 + nowTime.getMinutes() * 60 + nowTime.getSeconds()
-    targetSeconds =  targetHour * 3600
-    timeInterval = targetSeconds > nowSeconds ? targetSeconds - nowSeconds: targetSeconds + 24 * 3600 - nowSeconds 
-    setTimeout(getProductFileList,timeInterval * 1000)
-}
-
+function displayNotification() {
+    if (Notification.permission == 'granted') {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        var options = {
+          icon: './icon.png',
+          body: 'This is a notification from PWA',
+          //image: 'https://augt-forum-upload.s3-ap-southeast-1.amazonaws.com/original/1X/6b3cd55281b7bedea101dc36a6ef24034806390b.png'
+        };
+        reg.showNotification('weather PWA', options);
+      });
+    }
+  }
+  
 function askPermission(){
     return new Promise(function(resolve , reject){
         var permissionResult = Notification.requestPermission(function(result){
@@ -518,17 +679,88 @@ function askPermission(){
         }
     })
 }
+
 //publish key is base64 type, need to be transfered to Uint8Array type
-// function subscribeUserToPush(registration , publicKey){
-//     var subscribeOptions = {
-//         userVisibleOnly : true,
-//         applicationServerKey : window.urlBase64ToUint8Array(publicKey)
-//     };
-//     return registration.pushManager.subscribe(subscribeOptions).then(function(pushSubscription){
-//         console.log('pushscription' ,pushSubscription)
-//         return pushSubscription;
-//     })
-// }
+// 发起订阅
+function subscribeUserToPush(registration , publicKey){
+    var subscribeOptions = {
+        userVisibleOnly : true,
+        applicationServerKey : window.urlBase64ToUint8Array(publicKey)
+    };
+    return registration.pushManager.subscribe(subscribeOptions).then(function(pushSubscription){
+        console.log('pushscription' ,pushSubscription)
+        return pushSubscription;
+    })
+}
+// base64 => Unit8Array
+// https://github.com/web-push-libs/web-push#using-vapid-key-for-applicationserverkey
+window.urlBase64ToUint8Array = function (base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/\-/g, '+')
+      .replace(/_/g, '/');
+  
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+  
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+function sendSubscriptionToServer(body, url) {
+    url = url || 'http://127.0.0.1:3000/subscription';
+    return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.timeout = 60000;
+        xhr.onreadystatechange = function () {
+            var response = {};
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                try {
+                    response = JSON.parse(xhr.responseText);
+                }
+                catch (e) {
+                    response = xhr.responseText;
+                }
+                resolve(response);
+            }
+            else if (xhr.readyState === 4) {
+                resolve();
+            }
+        };
+        xhr.onabort = reject;
+        xhr.onerror = reject;
+        xhr.ontimeout = reject;
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(body);
+    });
+}
+
+if ('serviceWorker' in navigator && 'PushManager' in window) {
+    var publicKey = "BPwgIYTh9n2u8wpAf-_VzZ4dwaBY8UwfRjWZzcoX6RN7y5xD0RL9U4YDCdeoO3T8nJcWsQdvNirT11xJwPljAyk";
+    // 注册service worker
+    navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
+        console.log('Service Worker 注册成功');
+        //displayNotification();
+        // 开启该客户端的消息推送订阅功能
+        return subscribeUserToPush(registration, publicKey);
+    }).then(function (subscription) {
+        var body = {subscription: subscription};
+        // 为了方便之后的推送，为每个客户端简单生成一个标识
+        body.uniqueid = new Date().getTime();
+        console.log('uniqueid', body.uniqueid);
+        console.log(JSON.stringify(body))
+        // 将生成的客户端订阅信息存储在自己的服务器上
+        return sendSubscriptionToServer(JSON.stringify(body));
+    }).then(function (res) {
+        console.log(res);
+    }).catch(function (err) {
+        console.log(err);
+    });
+}
+
 
 window.addEventListener('load',function () {
     function updateOnlineStatus(event) {
@@ -541,6 +773,30 @@ window.addEventListener('load',function () {
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
   });
+
+
+//============================== get location =============================
+function locateME() {
+    if(navigator.geolocation){  
+        navigator.geolocation.getCurrentPosition(successCallback,errorCallback);
+    }else{
+        console.log("your browser can't locate your location");
+    }
+    
+    function successCallback(position) {
+        var lat = position.coords.latitude.toString();  
+        var lon = position.coords.longitude.toString();  
+        lat = lat.slice(0,lat.indexOf('.')+3);
+        lon = lon.slice(0,lon.indexOf('.')+3);
+        console.log("get location successfully: "+"lat: "+lat+" lon: "+lon);  
+    }
+    function errorCallback(error) {
+        console.log("failed to get your location");  
+        console.log(error);  // PositionError {code: 1, message: "User denied Geolocation"}
+    }
+}
+
+
 
 
 

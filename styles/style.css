@@ -35,6 +35,15 @@
     text-align: center;
 }
 
+.hint-Selector{
+    width: 175px;
+    background-color: whitesmoke;
+    margin-right:120px;
+}
+.hintShow{
+    text-align: center;
+}
+
 .confirm {
 	-moz-box-shadow: 0px 0px 0px 2px #9fb4f2;
 	-webkit-box-shadow: 0px 0px 0px 2px #9fb4f2;
@@ -91,6 +100,15 @@
     border: 0px;
     cursor: pointer;
     margin-left: 20px;
+}
+
+#remove_btn{
+    float: right;
+    width: 20px;
+    height: 20px;
+    border: 0px;
+    cursor: pointer;
+    margin-right: 30px;
 }
 
 .dialog-container{
