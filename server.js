@@ -24,7 +24,7 @@ webpush.setVapidDetails(
 );
 
 /**
- * 提交subscription信息，并保存
+ * send subscription info，and save in DB (util file)
  */
 router.post('/subscription', koaBody(), async ctx => {
     let body = ctx.request.body;
@@ -36,7 +36,7 @@ router.post('/subscription', koaBody(), async ctx => {
 
 
 /**
- * 向push service推送信息
+ * send push info to push service
  * @param {*} subscription 
  * @param {*} data
  */
@@ -44,10 +44,11 @@ router.post('/subscription', koaBody(), async ctx => {
 function pushMessage(subscription, data = {}) {
     
     webpush.sendNotification(subscription, data).then(data => {
-        console.log('push service的相应数据:', JSON.stringify(data));
+        console.log('push service\'s data is:', JSON.stringify(data));
+        //console.log("Subscription from user: "+subscription);  // endpoint and keys
         return;
     }).catch(err => {
-        // 判断状态码，440和410表示失效
+        // 440 and 410 means failed
         if (err.statusCode === 410 || err.statusCode === 404) {
             return util.remove(subscription);
         }
@@ -60,8 +61,7 @@ function pushMessage(subscription, data = {}) {
 
 
 /**
- * 消息推送API，可以在管理后台进行调用
- * 本例子中，可以直接post一个请求来查看效果
+ * push API
  */
 router.post('/push', koaBody(), async ctx => {
     let {uniqueid, payload} = ctx.request.body;

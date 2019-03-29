@@ -17,8 +17,10 @@
       <header class="header">
           <h1 class="header_title">Weather PWA</h1>
           <input type="image" id="add_btn" src="/icons/addwhite.svg" class="header_btn"/>
-          <input type="image" id="refresh_btn" src="/icons/refreshwhite.svg" class="header_btn" />
+          <input type="image" id="refresh_btn" src="/icons/location.svg" class="header_btn" />
+          <input type="image" id="subscription_btn" src="/icons/subscribed.svg" class="header_btn" onclick="PUSH()" />
           <input type="image" id="remove_btn" src="/icons/remove.svg" class="header_btn" />
+
           <div class="search-city">
               <input type="text" class="search-box" autocomplete="off" id="search" onkeyup="showHint(this.value)">
               <input type="button" class="confirm" id="confirm" value="add">

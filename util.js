@@ -36,7 +36,7 @@ module.exports.saveRecord = function (obj) {
                 return;
             }
             if (res) {
-                console.log('已存在');
+                console.log('uniqueid already existed');
                 res.uniqueid = uniqueid;
                 db.update({subscription}, res, {}, err => {
                     if (err) {
@@ -52,7 +52,7 @@ module.exports.saveRecord = function (obj) {
                     j(err);
                     return;
                 }
-                console.log('存储完毕');                
+                console.log('user infomation already saved in server DB');                
                 r(obj);
             });
         });

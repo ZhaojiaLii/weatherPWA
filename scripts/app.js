@@ -681,7 +681,7 @@ function askPermission(){
 }
 
 //publish key is base64 type, need to be transfered to Uint8Array type
-// 发起订阅
+// start subscription
 function subscribeUserToPush(registration , publicKey){
     var subscribeOptions = {
         userVisibleOnly : true,
@@ -738,28 +738,34 @@ function sendSubscriptionToServer(body, url) {
     });
 }
 
-if ('serviceWorker' in navigator && 'PushManager' in window) {
-    var publicKey = "BPwgIYTh9n2u8wpAf-_VzZ4dwaBY8UwfRjWZzcoX6RN7y5xD0RL9U4YDCdeoO3T8nJcWsQdvNirT11xJwPljAyk";
-    // 注册service worker
-    navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
-        console.log('Service Worker 注册成功');
-        //displayNotification();
-        // 开启该客户端的消息推送订阅功能
-        return subscribeUserToPush(registration, publicKey);
-    }).then(function (subscription) {
-        var body = {subscription: subscription};
-        // 为了方便之后的推送，为每个客户端简单生成一个标识
-        body.uniqueid = new Date().getTime();
-        console.log('uniqueid', body.uniqueid);
-        console.log(JSON.stringify(body))
-        // 将生成的客户端订阅信息存储在自己的服务器上
-        return sendSubscriptionToServer(JSON.stringify(body));
-    }).then(function (res) {
-        console.log(res);
-    }).catch(function (err) {
-        console.log(err);
-    });
+function PUSH() {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+        var publicKey = "BPwgIYTh9n2u8wpAf-_VzZ4dwaBY8UwfRjWZzcoX6RN7y5xD0RL9U4YDCdeoO3T8nJcWsQdvNirT11xJwPljAyk";
+        navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
+            //displayNotification();
+            // open the subscription function of the page
+            return subscribeUserToPush(registration, publicKey);
+        }).then(function (subscription) {
+            console.log("user subscribed!");
+            var body = {subscription: subscription};
+            // give every user a unique id in order to push notification
+            body.uniqueid = new Date().getTime();
+            console.log('uniqueid', body.uniqueid);
+            console.log(JSON.stringify(body))
+            // save the subscription info in the server (bedb used for saving)
+            return sendSubscriptionToServer(JSON.stringify(body));
+        }).then(function (res) {
+            console.log(res);
+        }).catch(function (err) {
+            console.log(err);
+        });
+    }else{
+        console.log('Push messaging is not supported.')
+    }
+
+    alert("subscribed!");
 }
+
 
 
 window.addEventListener('load',function () {

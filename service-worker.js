@@ -143,7 +143,7 @@ self.addEventListener('fetch', function(e) {
         type = data.type,
         msg = data.msg;
 
-    console.log(`service worker收到消息 type: ${type} ; msg : ${JSON.stringify(msg)}`)
+    console.log(`service worker get message type: ${type} ; msg : ${JSON.stringify(msg)}`)
 
     dealData.trigger(type , msg);
 })
@@ -172,15 +172,15 @@ const dealData = new DealData();
 
 
 self.addEventListener('push',function (e) {
-  console.log("获得push请求");
+  console.log("get push request");
   var data = e.data;
     if (e.data) {
         data = data.json();
-        console.log('push的数据为：', data);
+        console.log('push data is：', data);
         self.registration.showNotification(data.text);        
     } 
     else {
-        console.log('push没有任何数据');
+        console.log('push request has no content');
     }
   });
 
