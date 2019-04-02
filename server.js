@@ -64,17 +64,26 @@ function pushMessage(subscription, data = {}) {
  * push API
  */
 router.post('/push', koaBody(), async ctx => {
-    let {uniqueid, payload} = ctx.request.body;
-    let list = uniqueid ? await util.find({uniqueid}) : await util.findAll();
-    let status = list.length > 0 ? 0 : -1;
-    for (let i = 0; i < list.length; i++) {
-        let subscription = list[i].subscription;
-        pushMessage(subscription, JSON.stringify(payload));
-    }
+    for(i in ctx.request.body){
+        var json = JSON.parse(i); 
+        let{uniqueid,payload} = json
+        console.log('uniqueid: ' + uniqueid);
+        console.log('payload: ' + payload);
+        let list = uniqueid ? await util.find({uniqueid}) : await util.findAll();
+        let status = list.length > 0 ? 0 : -1;
+        
+        for (let i = 0; i < list.length; i++) {
+            let subscription = list[i].subscription;
+            pushMessage(subscription, JSON.stringify(payload));
+        }
 
-    ctx.response.body = {
-        status
-    };
+        ctx.response.body = {
+            status
+        };
+    }
+    
+    
+    
 });
 
 router.get('/login', async(ctx) => {

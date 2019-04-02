@@ -93,7 +93,7 @@ document.getElementById('confirm').addEventListener('click',function () {
     var getInput = $('.search-box').val();
     if (getInput!=="") {
         getInput = getInput.slice(0,1).toUpperCase()+getInput.slice(1).toLowerCase();
-        readJSONfile("/json/city.list.json", function(text){
+        readJSONfile("/json/city.json", function(text){
             var data = JSON.parse(text);
             //console.log(getCityIDbyName(getInput,data));
             var id = getCityIDbyName(getInput,data);
@@ -481,7 +481,7 @@ function showHint(string) {
         $('.hint').remove();
         $('.hint-Selector').hide();
     }else{
-        readJSONfile("/json/city.list.json", function(text){
+        readJSONfile("/json/city.json", function(text){
             var data = JSON.parse(text);
             
             var cityFind = [];
@@ -738,34 +738,51 @@ function sendSubscriptionToServer(body, url) {
     });
 }
 
+var sub_state = 0;
 function PUSH() {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-        var publicKey = "BPwgIYTh9n2u8wpAf-_VzZ4dwaBY8UwfRjWZzcoX6RN7y5xD0RL9U4YDCdeoO3T8nJcWsQdvNirT11xJwPljAyk";
-        navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
-            //displayNotification();
-            // open the subscription function of the page
-            return subscribeUserToPush(registration, publicKey);
-        }).then(function (subscription) {
-            console.log("user subscribed!");
-            var body = {subscription: subscription};
-            // give every user a unique id in order to push notification
-            body.uniqueid = new Date().getTime();
-            console.log('uniqueid', body.uniqueid);
-            console.log(JSON.stringify(body))
-            // save the subscription info in the server (bedb used for saving)
-            return sendSubscriptionToServer(JSON.stringify(body));
-        }).then(function (res) {
-            console.log(res);
-        }).catch(function (err) {
-            console.log(err);
-        });
+    if (sub_state === 0) {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            var publicKey = "BPwgIYTh9n2u8wpAf-_VzZ4dwaBY8UwfRjWZzcoX6RN7y5xD0RL9U4YDCdeoO3T8nJcWsQdvNirT11xJwPljAyk";
+            navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
+                //displayNotification();
+                // open the subscription function of the page
+                return subscribeUserToPush(registration, publicKey);
+            }).then(function (subscription) {
+                console.log("user subscribed!");
+                var body = {subscription: subscription};
+                // give every user a unique id in order to push notification
+                body.uniqueid = new Date().getTime();
+                console.log('uniqueid', body.uniqueid);
+                console.log(JSON.stringify(body))
+                // save the subscription info in the server (bedb used for saving)
+                return sendSubscriptionToServer(JSON.stringify(body));
+            }).then(function (res) {
+                console.log(res);
+            }).catch(function (err) {
+                console.log(err);
+            });
+        }else{
+            console.log('Push messaging is not supported.')
+        }
+        alert("subscribed!");
     }else{
-        console.log('Push messaging is not supported.')
-    }
-
-    alert("subscribed!");
+        alert("you have already subscribed.")
+    }   
+    sub_state = 1;
 }
 
+navigator.serviceWorker.addEventListener('message',function (e) {
+    var action = e.data;
+    console.log(`the client clicked on ${e.data}`);
+    switch(action){
+        case 'next-page':
+            location.href = './pages/next-page.html';
+            break;
+        case 'contact-me':
+            location.href = './pages/contact-me.html';
+            break;
+    }
+})
 
 
 window.addEventListener('load',function () {

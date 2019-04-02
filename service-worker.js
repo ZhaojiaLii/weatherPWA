@@ -9,7 +9,7 @@ var staticCache = [
     'scripts/DB.js',
     'scripts/idb.js',
     'styles/style.css',
-    'json/city.list.json',
+    'json/city.json',
 
     'images/bgdialog.jpeg',
 
@@ -177,15 +177,53 @@ self.addEventListener('push',function (e) {
     if (e.data) {
         data = data.json();
         console.log('push data is：', data);
-        self.registration.showNotification(data.text);        
+        
+        var options = {
+          dir:'ltr',
+          icon: './icon.png',
+          body: data,
+          image: './images/notification/weather.gif',
+          silent:'true',
+          tag : 'pwa-starter',
+          renotify : true,
+          actions:[{
+            action : 'next-page',
+            title : 'next page'
+          },{
+              action : 'contact-me',
+              title : 'contact me'
+          }]
+        };
+        self.registration.showNotification("A notification from server.",options);        
     } 
     else {
         console.log('push request has no content');
     }
   });
 
+
 self.addEventListener('notificationclick', event => {  
-    // Do something with the event  
+    var action = event.action;
+    switch(action){
+      case 'next-page':
+        console.log('next page clicked');
+        break
+      case 'contact-me':
+        console.log('contact me clicked');
+        break
+      default:
+        console.log(`no handled: ${event.action}`);
+        action = 'default';
+        break
+    }
+    // service worker can't handle DOM, but we can communicate with client
+    event.waitUntil(   
+      self.clients.matchAll().then(function (clients) {
+        clients.forEach(client => {
+          client.postMessage(action);
+        });
+      })
+    )
     event.notification.close();  
   });
 self.addEventListener('notificationclose', event => {  
