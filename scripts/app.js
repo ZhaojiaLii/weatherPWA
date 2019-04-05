@@ -111,8 +111,10 @@ document.getElementById('confirm').addEventListener('click',function () {
     
 })
 
+
 $('#remove_btn').click(function () {
     showRemove();
+    
 })
 
 function searchADD(id) {
@@ -361,7 +363,7 @@ function settimebackground() {
 
     if (hour<8) {
         state = 'night';
-        url = '/images/background/night.gif';
+        url = '/images/background/iphoneX.jpg';
         console.log(hour+' hours at '+state)
     }else if (hour<12) {
         state = 'morning';
@@ -369,7 +371,7 @@ function settimebackground() {
         console.log(hour+' hours in the '+state)
     }else if (hour<17){
         state = 'afternoon';
-        url = '/images/background/afternoon.jpeg';
+        url = '/images/background/iphoneX.jpg';
         console.log(hour+' hours in the '+state)
     }else if (hour<20) {
         state = 'sunset';
@@ -550,20 +552,36 @@ function getClick() {
 }
 
 $('.remove-menu').hide();
+var tagRemove = 0
 function showRemove() {
-    for(var i=0; i<window.localStorage.length;i++){
-        var city = window.localStorage.key(i);
-        $('.remove').append('<li class="ops"><input type="button"  class="op" value='+city+' onclick="Delete(this.value)"></input></li>');
+    if (tagRemove === 0) {
+        if ($('.remove').length!==0) {
+            for(var i=0; i<window.localStorage.length;i++){
+                var city = window.localStorage.key(i);
+                console.log(city);
+                $('.remove').append('<li class="ops"><input type="button"  class="op" value='+city+' onclick="Delete(this.value)"></input></li>');
+            }
+            
+            $('.ops').css("background-color","white");
+            $('.op').css("width","150px");
+            $('.card').css("position","relative");
+            $('.card').css("float","right");
+            $('.card').css("padding-right","50px");
+        
+            $('.card').css("z-index","9999");
+            $('.remove-menu').show();
+            tagRemove = 1;
+        }else{
+            console.log("nothing in the list.")
+            console.log($('.remove'))
+        }
+        
+    }else{
+        $('.ops').remove();
+        tagRemove = 0;
     }
     
-    $('.ops').css("background-color","white");
-    $('.op').css("width","150px");
-    $('.card').css("position","relative");
-    $('.card').css("float","right");
-    $('.card').css("padding-right","50px");
-
-    $('.card').css("z-index","9999");
-    $('.remove-menu').show();
+    
 }
 
 function Delete(name) {
@@ -771,18 +789,18 @@ function PUSH() {
     sub_state = 1;
 }
 
-navigator.serviceWorker.addEventListener('message',function (e) {
-    var action = e.data;
-    console.log(`the client clicked on ${e.data}`);
-    switch(action){
-        case 'next-page':
-            location.href = './pages/next-page.html';
-            break;
-        case 'contact-me':
-            location.href = './pages/contact-me.html';
-            break;
-    }
-})
+// navigator.serviceWorker.addEventListener('message',function (e) {
+//     var action = e.data;
+//     console.log(`the client clicked on ${e.data}`);
+//     switch(action){
+//         case 'next-page':
+//             location.href = './pages/next-page.html';
+//             break;
+//         case 'contact-me':
+//             location.href = './pages/contact-me.html';
+//             break;
+//     }
+// })
 
 
 window.addEventListener('load',function () {
