@@ -6,7 +6,7 @@
 
 .header_title{
     color: white;
-    font-size: 25px;
+    font-size: 60px;
     text-align: center;
     margin-left: 130px;
     margin-right: 130px;
@@ -15,7 +15,7 @@
 
 .search-box{
     border: 1px solid #ccc;
-    padding: 7px 0px;
+    padding: 20px 20px;
     border-radius: 3px;
     padding-left:5px;
     -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
@@ -33,6 +33,7 @@
 
 .search-city{
     text-align: center;
+    font-size: 60px;
 }
 
 .hint-Selector{
@@ -64,9 +65,9 @@
 	cursor:pointer;
 	color:#ffffff;
 	font-family:Arial;
-    font-size:17px;
+    font-size:30px;
     margin-left: 10px;
-	padding:3px 12px;
+	padding:10px 20px;
 	text-decoration:none;
 	text-shadow:0px 1px 0px #7791da;
 }
@@ -87,16 +88,16 @@
 
 #add_btn{
     float: right;
-    width: 20px;
-    height: 20px;
+    width: 50px;
+    height: 50px;
     border: 0px;
     cursor: pointer;
     margin-right: 20px;
 }
 #refresh_btn{
     float: left;
-    width: 20px;
-    height: 20px;
+    width: 50px;
+    height: 50px;
     border: 0px;
     cursor: pointer;
     margin-left: 20px;
@@ -104,8 +105,8 @@
 
 #remove_btn{
     float: right;
-    width: 20px;
-    height: 20px;
+    width: 50px;
+    height: 50px;
     border: 0px;
     cursor: pointer;
     margin-right: 30px;
@@ -114,8 +115,8 @@
 
 #subscription_btn{
     float: left;
-    width: 20px;
-    height: 20px;
+    width: 50px;
+    height: 50px;
     border: 0px;
     cursor: pointer;
     margin-left: 30px;
@@ -127,8 +128,8 @@
     background-size:cover;
     background-repeat: no-repeat; 
     position: absolute;
-    width: 200px;
-    height: 200px;
+    width: 500px;
+    height: 500px;
     left: 0px;
     right: 0px;
     bottom: 0px;
@@ -139,38 +140,41 @@
 }
 
 .dialog-title{
-    font-size: 150%;
+    font-size: 300%;
     text-align: center;
-    margin-top: 5px;
+    margin-top: 30px;
 }
 
 #selectCityToAdd{
-    width: 150px;
-    height: 30px;
-    margin-top: 40px;
-    margin-left: 25px;
+    width: 400px;
+    height: 80px;
+    margin-top: 100px;
+    margin-left: 50px;
     margin-right: auto;
     border-radius: 10px;
+    font-size: 40px;
 }
 
 #butAddCity{
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 100px;
-    height: 30px;
+    width: 250px;
+    height: 80px;
     background-color: white;
     border-radius: 10px;
+    font-size: 40px;
 }
 
 #butAddCancel{
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 100px;
-    height: 30px;
+    width: 250px;
+    height: 80px;
     background-color: #ffffff;
     border-radius: 10px;
+    font-size: 40px;
 }
 
 
@@ -179,12 +183,12 @@
     background-size: cover;
     margin-top: 20px;
     position: relative;
-    width: 90%;
+    width: 80%;
     height: 300px;
     left: 0px;
     right: 0px;
     bottom: 0px;
-    top: 20px;
+    top: 150px;
     margin: auto;
     border-radius: 10px;
 }
@@ -239,6 +243,23 @@
 
 .city{
     font-size: 30px;
+}
+
+.test_sync{
+    position: absolute;
+    bottom: 0;
+    height: 50px;
+    width: 100%;
+    text-align: center;
+}
+
+#input_sync{
+    height: 30px;
+    width: 200px;
+}
+
+#confirm_sync{
+    height: 30px;
 }
 
 

@@ -1,7 +1,7 @@
 'use strict'
 var Privatekey = 'TIrMnK-r--TE7Tnwf-x4JfKwuFKz5tmQuDRWYmuwbhY';
 var APIkey = '186bd32bbcadf6c77e6c370efba0b47d';
-var testurl = 'http://localhost:3000/sync';
+var testurl = 'http://192.168.1.191:3000/sync';
 var windowDialog = document.getElementById('dialog');
 var card = document.getElementById('card');
 var description = "";
@@ -367,7 +367,7 @@ function settimebackground() {
         console.log(hour+' hours at '+state)
     }else if (hour<12) {
         state = 'morning';
-        url = '/images/background/morning.jpg';
+        url = '/images/background/iphoneX.jpg';
         console.log(hour+' hours in the '+state)
     }else if (hour<17){
         state = 'afternoon';
@@ -375,15 +375,17 @@ function settimebackground() {
         console.log(hour+' hours in the '+state)
     }else if (hour<20) {
         state = 'sunset';
-        url = '/images/background/sunset.jpeg';
+        url = '/images/background/iphoneX.jpg';
     }
     else if (hour<24) {
         state = 'night';
-        url = '/images/background/night.gif';
+        url = '/images/background/iphoneX.jpg';
         console.log(hour+' hours at '+state)
     }
+    url = '/images/background/bg.jpg';
     var getbackground = document.getElementById('all');
-    getbackground.style.backgroundImage = "url('"+url+"')";
+    //getbackground.style.backgroundImage = "url('"+url+"')";
+    getbackground.style.backgroundImage = "url(/images/background/bg.jpg)"
     getbackground.style.backgroundSize = 'cover';
     getbackground.style.backgroundRepeat = 'no-repeat';
     //getbackground.style.backgroundPosition = 'center center';
@@ -563,10 +565,13 @@ function showRemove() {
             }
             
             $('.ops').css("background-color","white");
-            $('.op').css("width","150px");
+            $('.op').css("width","300px");
+            $('.op').css("height","50px");
+            $('.op').css("font-size","40px");
             $('.card').css("position","relative");
             $('.card').css("float","right");
-            $('.card').css("padding-right","50px");
+            $('.card').css("padding-right","80px");
+            $('.card').css("padding-top","100px");
         
             $('.card').css("z-index","9999");
             $('.remove-menu').show();
@@ -618,25 +623,58 @@ if('serviceWorker' in navigator) {
     	function(error){
     		console.log("error in registration with "+ error)
     	});
+}else{
+    console.log("service worker not supported")
 };
 
-if('serviceWorker' in navigator && 'SyncManager' in window){
-    navigator.serviceWorker.ready.then(function (registration) {
-        var tag = "sync-test"; 
-         
-        document.getElementById('confirm').addEventListener('click', ()=> {
-            //console.log('background sync start');
-            if (registration.sync) {
-            registration.sync.register(tag).then(function () {
-                console.log(`background sync actived`);
-            }).catch(function (err) {
-                console.log(`background sync failed`, err);
-            });
-        }
+if (navigator.serviceWorker) {
+    navigator.serviceWorker.register('/service-worker.js',{scope:'/'}).then(
+        function () {
+            return navigator.serviceWorker.ready
+        }).then(
+                function (registration) {
+            document.getElementById('confirm_sync').addEventListener('click',(event)=>{
+                if (registration.sync) {
+                    registration.sync.register('sync_test').then(function () {
+                        var input = document.getElementById('input_sync');
+                        console.log('background sync start: ',input.value);
+                    }).then(()=>{
+                        console.log("registration finished")
+                    })
+                    .catch(function (error) {
+                       return error 
+                    })
+                }
+            })
         })
-        
-    })
 }
+
+// if('serviceWorker' in navigator && 'SyncManager' in window){
+//     console.log("sync function supported");
+//     document.getElementById('confirm_sync').addEventListener('click', ()=> {
+        
+//         navigator.serviceWorker.ready.then(function(swRegistration) {
+//             console.log('background sync start: ',input.value);
+//             return swRegistration.sync.register('sync');
+//             });
+//             //event.preventDefault();
+//             // new Promise(function (resolve,reject) {
+//             //     Notification.requestPermission(function(result) {
+//             //         if (result !== 'granted') return reject(Error("Denied notification permission"));
+//             //         resolve();
+//             //       })
+//             // }).then(function () {
+//             //     return navigator.serviceWorker.ready;
+//             // }).then(function (reg) {
+//             //     return reg.sync.register('sync');
+//             // }).then(function () {
+//             //     var input = document.getElementById('input_sync');
+//             //     console.log('background sync start: ',input.value);
+//             // }).catch(function (err) {
+//             //     console.log(`background sync failed`, err);
+//             // });
+//         })
+// }
 
 
 // navigator.serviceWorker.ready.then(function(registration){
@@ -654,9 +692,6 @@ if('serviceWorker' in navigator && 'SyncManager' in window){
         
 //     })
 // })
-
-    
-
 
 
 // if('serviceWorker' in navigator && 'PushManager' in window){
@@ -728,7 +763,7 @@ window.urlBase64ToUint8Array = function (base64String) {
 }
 
 function sendSubscriptionToServer(body, url) {
-    url = url || 'http://127.0.0.1:3000/subscription';
+    url = url || 'http://192.168.1.191:3000/subscription';
     return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.timeout = 60000;
@@ -789,26 +824,41 @@ function PUSH() {
     sub_state = 1;
 }
 
-// navigator.serviceWorker.addEventListener('message',function (e) {
-//     var action = e.data;
-//     console.log(`the client clicked on ${e.data}`);
-//     switch(action){
-//         case 'next-page':
-//             location.href = './pages/next-page.html';
-//             break;
-//         case 'contact-me':
-//             location.href = './pages/contact-me.html';
-//             break;
-//     }
-// })
+navigator.serviceWorker.addEventListener('message',function (e) {
+    var action = e.data;
+    console.log(`the client clicked on ${e.data}`);
+    switch(action){
+        case 'next-page':
+            location.href = './pages/next-page.html';
+            break;
+        case 'contact-me':
+            location.href = './pages/contact-me.html';
+            break;
+    }
+})
 
 
 window.addEventListener('load',function () {
     function updateOnlineStatus(event) {
       if (navigator.onLine) {
         console.log('device is now online');
+        $('#all').css("background-image", "url('/images/background/bg.jpg')");
+        $('.test_sync').css("bottom","0px");
+        $('.offline').remove()
       } else {
         console.log('device is now offline');
+        $('#all').append('<div class="offline"></div>');
+        $('.offline').append('<p class="offline_hint">offline mode</p>');
+        $('.offline_hint').css("text-align","center");
+        $('.offline_hint').css("font-size","30px");
+        $('.offline_hint').css("padding-bottom","20px");
+        $('.offline').css("background-color","gray");
+        $('.offline').css("position","absolute");
+        $('.offline').css("bottom","0px");
+        $('.offline').css("height","60px");
+        $('.offline').css("width","98%");
+        $('.test_sync').css("bottom","60px");
+        $('#all').css("background-image", "url('/images/background/offline.jpg')");
       }
     }
     window.addEventListener('online', updateOnlineStatus);

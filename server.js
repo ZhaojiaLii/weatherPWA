@@ -5,7 +5,7 @@ const serve     = require('koa-static');
 const Router    = require('koa-router');
 const koaBody   = require('koa-body');
 const webpush   = require('web-push');
-const cors = require('koa2-cors');
+const cors      = require('koa2-cors');
 const bodyParser = require('koa-bodyparser');
 
 const port = process.env.PORT || 3000;
@@ -16,6 +16,7 @@ var vapidKeys = {
     publicKey:"BPwgIYTh9n2u8wpAf-_VzZ4dwaBY8UwfRjWZzcoX6RN7y5xD0RL9U4YDCdeoO3T8nJcWsQdvNirT11xJwPljAyk",
     privateKey:"TIrMnK-r--TE7Tnwf-x4JfKwuFKz5tmQuDRWYmuwbhY"
 }
+
 
 webpush.setVapidDetails(
     'zhli:zhli@brocelia.fr',
@@ -29,6 +30,7 @@ webpush.setVapidDetails(
 router.post('/subscription', koaBody(), async ctx => {
     let body = ctx.request.body;
     await util.saveRecord(body);
+    ctx.set('Access-Control-Allow-Origin','*')
     ctx.response.body = {
         status: 0
     };
@@ -86,7 +88,7 @@ router.post('/push', koaBody(), async ctx => {
     
 });
 
-router.get('/login', async(ctx) => {
+router.get('/sync', async(ctx) => {
     let query = ctx.query;
     //let query = ctx.request.query;
     console.log(query);
@@ -95,7 +97,19 @@ router.get('/login', async(ctx) => {
     };
 })
 
-app.use(cors());
+app.use(cors({
+    origin: function (ctx) {
+        if (ctx.url === '/subscription') {
+            return "*"; // 允许来自所有域名请求
+        }
+        return 'http://localhost:8085';
+    },
+    exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
+    maxAge: 5,
+    credentials: true,
+    allowMethods: ['GET', 'POST', 'DELETE'],
+    allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
+}));
 app.use(router.routes());
 app.use(serve(__dirname + '/public'));
 app.listen(port,() => {

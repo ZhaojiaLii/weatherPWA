@@ -1,8 +1,9 @@
-
 var cacheName = "staticCache"
 var staticCache = [
     '/',
     'index.html',
+    'pages/contact-me.html',
+    'pages/next-page.html',
     'manifest.json',
     'favicon.ico',
     'scripts/app.js',
@@ -13,10 +14,8 @@ var staticCache = [
 
     'images/bgdialog.jpeg',
 
-    'images/background/afternoon.jpeg',
-    'images/background/morning.jpg',
-    'images/background/night.gif',
-    'images/background/sunset.jpeg',
+    'images/background/iphoneX.jpg',
+    'images/background/offline.jpg',
 
     'images/weathericon/clear.png',
     'images/weathericon/cloudy.png',
@@ -36,7 +35,10 @@ var staticCache = [
     'images/weatherbackground/windyImg.jpg',
 
     'icons/addwhite.svg',
-    'icons/refreshwhite.svg',
+    'icons/refreshwhite.svg',                       
+    'icons/location.svg',
+    'icons/subscribed.svg',
+    'icons/remove.svg',
     'icon.png'
 ];
 
@@ -73,7 +75,7 @@ self.addEventListener('activate', function(e) {
 
   
 var requestCache = 'requestCache';
-var cacheFetchUrls = ['/sync'];
+var cacheFetchUrls = ['http://192.168.1.191:3000/sync'];
 
 self.addEventListener('fetch', function(e) {
       //console.log('[ServiceWorker] Fetch', e.request.url);
@@ -118,34 +120,33 @@ self.addEventListener('fetch', function(e) {
     // })    
   });
 
-  self.addEventListener('sync',function (e) {
-    console.log('service worker need to sync in background...',e);
-    if (e.tag === 'sync-test'){
-      console.log("syncing new request...");
-      // const url = 'https://localhost:3000/sync';
-      init = {
-        method:'GET'
-      }
-      var request = new Request('/sync', init);
-      e.waitUntil(
-          fetch(request).then(function (response) {
-              return response.json();
-          })
-      );
-      console.log("sync finished!")
-    }else if(e.tag === 'sample_sync_event'){
-        console.log('2222222222222');
+
+self.onsync = function (e) {
+  console.log('service worker need to sync in background...',e);
+  if (e.tag == 'sync_test'){
+    console.log("syncing new request...");
+    const url = 'http://192.168.1.191:3000/sync';
+    init = {
+      method:'GET'
     }
-  })
+    var request = new Request(url, init);
+    e.waitUntil(
+        fetch(request).then(function (response) {
+            return response.json();
+        })
+    );
+    console.log("sync finished!")
+  }
+}
 
-  self.addEventListener('message' , function(e){
-    var data = JSON.parse(e.data),
-        type = data.type,
-        msg = data.msg;
+self.addEventListener('message' , function(e){
+  var data = JSON.parse(e.data),
+      type = data.type,
+      msg = data.msg;
 
-    console.log(`service worker get message type: ${type} ; msg : ${JSON.stringify(msg)}`)
+  console.log(`service worker get message type: ${type} ; msg : ${JSON.stringify(msg)}`)
 
-    dealData.trigger(type , msg);
+  dealData.trigger(type , msg);
 })
 
 class DealData{

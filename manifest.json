@@ -1,6 +1,6 @@
 {
     "name": "weather PWA",
-    "short_name":"wsk",
+    "short_name":"PWA weather",
     "lang": "en",
     "scope": "/",
     "icons":[{
