@@ -14,8 +14,9 @@ var staticCache = [
 
     'images/bgdialog.jpeg',
 
-    'images/background/iphoneX.jpg',
+    'images/background/bg.jpg',
     'images/background/offline.jpg',
+    'images/background/bg1.jpg',
 
     'images/weathericon/clear.png',
     'images/weathericon/cloudy.png',
@@ -71,7 +72,24 @@ self.addEventListener('activate', function(e) {
     return self.clients.claim();
   });
 
-
+  self.addEventListener('sync',function(e){
+    console.log('service worker need to sync in background...',e);
+    if (e.tag == 'sync_test'){
+      console.log("syncing new request...");
+      const url = 'http://127.0.0.1:3000/sync';
+      init = {
+        method:'GET'
+      }
+      var request = new Request(url, init);
+      e.waitUntil(
+          fetch(request).then(function (response) {
+            console.log(response);
+              return response;
+          })
+      );
+      console.log("sync finished!")
+    }
+  })
 
   
 var requestCache = 'requestCache';
@@ -121,23 +139,7 @@ self.addEventListener('fetch', function(e) {
   });
 
 
-self.onsync = function (e) {
-  console.log('service worker need to sync in background...',e);
-  if (e.tag == 'sync_test'){
-    console.log("syncing new request...");
-    const url = 'http://192.168.1.191:3000/sync';
-    init = {
-      method:'GET'
-    }
-    var request = new Request(url, init);
-    e.waitUntil(
-        fetch(request).then(function (response) {
-            return response.json();
-        })
-    );
-    console.log("sync finished!")
-  }
-}
+
 
 self.addEventListener('message' , function(e){
   var data = JSON.parse(e.data),

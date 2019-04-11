@@ -382,10 +382,9 @@ function settimebackground() {
         url = '/images/background/iphoneX.jpg';
         console.log(hour+' hours at '+state)
     }
-    url = '/images/background/bg.jpg';
     var getbackground = document.getElementById('all');
     //getbackground.style.backgroundImage = "url('"+url+"')";
-    getbackground.style.backgroundImage = "url(/images/background/bg.jpg)"
+    getbackground.style.backgroundImage = "url(/images/background/bg1.jpg)"
     getbackground.style.backgroundSize = 'cover';
     getbackground.style.backgroundRepeat = 'no-repeat';
     //getbackground.style.backgroundPosition = 'center center';
@@ -416,22 +415,30 @@ function changetextcolor(weather) {
     
 }
 
+var unvalidurl = 'http://api.openweathermap.org/data/2.5/weather?id=undefined&APPID='+APIkey;
 var getJSON = function (url) {
-    var type = 'get';  
-    return new Promise(function (resolve,reject) {
-        var xhr = new XMLHttpRequest();
-        xhr.open(type,url,true);
-        xhr.responseType = 'json';
-        xhr.onload = function(){
-            var status = xhr.status;
-            if (status == 200) {
-                resolve(xhr.response);
-            } else {
-                reject(status);
-            }
-        };
-        xhr.send();
-    });
+    if (url === unvalidurl) {
+        alert("cannot find the city from server");
+        $('.hint-Selector').hide();
+        $('#search-box').val() = "";
+    }else{
+        var type = 'get';  
+        return new Promise(function (resolve,reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open(type,url,true);
+            xhr.responseType = 'json';
+            xhr.onload = function(){
+                var status = xhr.status;
+                if (status == 200) {
+                    resolve(xhr.response);
+                } else {
+                    reject(status);
+                }
+            };
+            xhr.send();
+        });
+    }
+    
 };
 
 function readJSONfile(file,callback) {
@@ -472,7 +479,7 @@ function getCityIDbyName(name,data) {
     }
     
 }
-$('.hintShow').append('<select class="hint-Selector" onclick="getClick()"></select>');
+$('.hintShow').append('<select class="hint-Selector" style="width:200px; height:50px" onclick="getClick()" multiple></select>');
 $('.hint-Selector').hide();
 $('.hintShow').addClass("hintShow");
 $('.hint-Selector').addClass("hint-Selector");
@@ -498,27 +505,17 @@ function showHint(string) {
             })
             var showCity = [];
             var showID = [];
-            if (cityFind.length > 6) {
-                
-                for (let i = 0; i < 6; i++) {
-                    var random = [];
-                    var num = Math.floor(Math.random()*cityFind.length);
-                    if (random.includes(num)) {
-                        num = Math.floor(Math.random()*cityFind.length);
-                    }else{
-
-                    }
-                    random.push(num);
-                    const element1 = cityFind[num];
-                    const element2 = cityID[num];
+            if (cityFind.length<30) {
+                for (let i = 0; i < cityFind.length; i++) {
+                    const element1 = cityFind[i];
+                    const element2 = cityID[i];
                     showCity.push(element1);
                     showID.push(element2);
                 }
             }else{
-                showCity = cityFind;
-                showID = cityID;
+                console.log("too many results.")
             }
-
+            
             var hint = $('.hint')
             if (hint.length!==0) {
                 $('.hint').remove();
@@ -528,13 +525,15 @@ function showHint(string) {
             $('.hint').css("color","white");
 
             var getOption = $('.hint-Selector option');
-            if (getOption.length !==0) {
+            if (getOption.length !== 0) {
                 $('.hint-Selector').show();
                 $('.hint-Selector').empty();
             }
             for (let i = 0; i < showCity.length; i++) {
                 const element1 = showCity[i];
                 const element2 = showID[i];
+                console.log(element1);
+                console.log(element2);
                 $('.hint-Selector').append('<option value="'+element2+'">'+element1+'</option>');    
             }
         });
@@ -566,7 +565,7 @@ function showRemove() {
             
             $('.ops').css("background-color","white");
             $('.op').css("width","300px");
-            $('.op').css("height","50px");
+            $('.op').css("height","100px");
             $('.op').css("font-size","40px");
             $('.card').css("position","relative");
             $('.card').css("float","right");
@@ -627,26 +626,29 @@ if('serviceWorker' in navigator) {
     console.log("service worker not supported")
 };
 
-if (navigator.serviceWorker) {
-    navigator.serviceWorker.register('/service-worker.js',{scope:'/'}).then(
-        function () {
-            return navigator.serviceWorker.ready
-        }).then(
-                function (registration) {
-            document.getElementById('confirm_sync').addEventListener('click',(event)=>{
-                if (registration.sync) {
-                    registration.sync.register('sync_test').then(function () {
-                        var input = document.getElementById('input_sync');
-                        console.log('background sync start: ',input.value);
-                    }).then(()=>{
-                        console.log("registration finished")
-                    })
-                    .catch(function (error) {
-                       return error 
-                    })
-                }
-            })
-        })
+if (navigator.serviceWorker && 'SyncManager' in window) {
+    navigator.serviceWorker.ready.then(
+        function (registration) {
+        document.getElementById('confirm_sync').addEventListener('click',()=>{
+            if (registration.sync) {
+                
+                registration.sync.register('sync_test').then(function (event) {
+                    console.log(registration.sync)
+                    var input = document.getElementById('input_sync');
+                    console.log('background sync start: ',input.value,event);
+                }).then(()=>{
+                    console.log("registration finished")
+                })
+                .catch(function (error) {
+                    return error 
+                })
+            }else{
+                console.log("sync function not supported")
+            }
+    })
+})
+}else{
+    console.log("sync manager not supported")
 }
 
 // if('serviceWorker' in navigator && 'SyncManager' in window){
@@ -679,7 +681,7 @@ if (navigator.serviceWorker) {
 
 // navigator.serviceWorker.ready.then(function(registration){
 //     var tag = 'sample_sync_event';
-//     document.getElementById('confirm').addEventListener('click', function(e){
+//     document.getElementById('confirm_sync').addEventListener('click', function(e){
 //         registration.sync.register(tag).then(function(){
 //             console.log(`后台同步已触发：${tag}`);
 
@@ -842,7 +844,7 @@ window.addEventListener('load',function () {
     function updateOnlineStatus(event) {
       if (navigator.onLine) {
         console.log('device is now online');
-        $('#all').css("background-image", "url('/images/background/bg.jpg')");
+        $('#all').css("background-image", "url('/images/background/bg1.jpg')");
         $('.test_sync').css("bottom","0px");
         $('.offline').remove()
       } else {

@@ -91,7 +91,7 @@ router.post('/push', koaBody(), async ctx => {
 router.get('/sync', async(ctx) => {
     let query = ctx.query;
     //let query = ctx.request.query;
-    console.log(query);
+    console.log("get request");
     ctx.body = {
         query
     };
