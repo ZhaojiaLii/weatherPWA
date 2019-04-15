@@ -76,13 +76,19 @@
     </div>
   </div>
 
+  <div class="show-request-time">
+    <div class="request-sync" style="display: block;"></div>
+    <div class="real-sync"  style="display: block;"></div>
+    
+    
+  </div>
+
   <div class="test_sync">
-    <input type="text" id="input_sync" />
-    <input type="submit" id="confirm_sync" value="submit"/>
+    <input type="submit" id="confirm_sync" value="hide time" onclick="show_time()"/>
   </div>
 
   
-  <script src="/scripts/app.js" async></script>
+  <script src="/scripts/app.js"></script>
   <script src="/scripts/DB.js"></script>
   <script src="/scripts/idb.js"></script>
   <script src="https://cdn.staticfile.org/angular.js/1.4.6/angular.min.js"></script>

@@ -89,12 +89,15 @@ router.post('/push', koaBody(), async ctx => {
 });
 
 router.get('/sync', async(ctx) => {
-    let query = ctx.query;
-    //let query = ctx.request.query;
-    console.log("get request");
-    ctx.body = {
-        query
-    };
+    var time = new Date();
+    var m = time.getMonth() + 1;   
+    var t = time.getFullYear() + "-" + m + "-" + time.getDate() + " " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds(); 
+    var obj = {
+        time: t
+    }
+    var requesttime = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds();
+    ctx.response.body = JSON.stringify(t);
+    console.log("you request weather API from PWA at: "+requesttime);
 })
 
 app.use(cors({

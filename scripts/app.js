@@ -1,13 +1,23 @@
 'use strict'
 var Privatekey = 'TIrMnK-r--TE7Tnwf-x4JfKwuFKz5tmQuDRWYmuwbhY';
 var APIkey = '186bd32bbcadf6c77e6c370efba0b47d';
-var testurl = 'http://192.168.1.191:3000/sync';
+var testurl = 'http://192.168.1.236:3000/sync';
 var windowDialog = document.getElementById('dialog');
 var card = document.getElementById('card');
 var description = "";
 var temp = 0;
 var cities = ['Paris','Jinzhou','Tokyo','New York','Greater London','Shanghai'];
 var alreadyadded =[];
+var sub_state = 0;
+if (window.localStorage.getItem("subscription")) {
+    console.log("Welcome back.")
+    if (window.localStorage.getItem("subscription")===1) {
+        
+    }
+}else{
+    console.log("first time launch the application")
+}
+window.localStorage.setItem("subscription",0);
 for(var i=0; i<window.localStorage.length;i++){
     alreadyadded.push(window.localStorage.key(i));
 }
@@ -64,9 +74,14 @@ var weathers = [
     ];
 
 settimebackground();  
-DBadd();  //get all the weather and saved in indexedDB
+//DBadd();  //get all the weather and saved in indexedDB
 refreshPage();  //make sure the added weather not disappear
 
+var getstate = window.localStorage.getItem("subscription");
+if (getstate === 0) {
+    $('#subscription_btn').remove();
+    $('#add_btn').remove();
+}
 
 document.getElementById('add_btn').addEventListener('click',function(){
     showdialog();
@@ -88,29 +103,6 @@ document.getElementById('butAddCity').addEventListener('click',function(){
 document.getElementById('butAddCancel').addEventListener('click',function(){
     hidedialog();
 });
-
-document.getElementById('confirm').addEventListener('click',function () {
-    var getInput = $('.search-box').val();
-    if (getInput!=="") {
-        getInput = getInput.slice(0,1).toUpperCase()+getInput.slice(1).toLowerCase();
-        readJSONfile("/json/city.json", function(text){
-            var data = JSON.parse(text);
-            //console.log(getCityIDbyName(getInput,data));
-            var id = getCityIDbyName(getInput,data);
-            if (id !== 0) {
-                searchADD(id);
-            }
-            
-        });
-    }else{
-        alert("empty city input")
-    }  
-    $('.search-box').val("");
-    $('.hint-Selector').hide();
-    $('.hint').remove();
-    
-})
-
 
 $('#remove_btn').click(function () {
     showRemove();
@@ -202,9 +194,9 @@ function handleJSON(city) {
 function refreshPage() {
     if (window.localStorage.length===0) {
         return
-    }else{
+    }else if(window.localStorage.length > 1){
         var showcity = [];
-        for (let i = 0; i < window.localStorage.length; i++) {
+        for (let i = 0; i < window.localStorage.length-1; i++) {
             var element = window.localStorage.getItem(window.localStorage.key(i));
             var json = JSON.parse(element);
             var temp = (json.main.temp-273.15).toString();
@@ -513,7 +505,7 @@ function showHint(string) {
                     showID.push(element2);
                 }
             }else{
-                console.log("too many results.")
+                //console.log("too many results.")
             }
             
             var hint = $('.hint')
@@ -526,15 +518,17 @@ function showHint(string) {
 
             var getOption = $('.hint-Selector option');
             if (getOption.length !== 0) {
-                $('.hint-Selector').show();
+                //$('.hint-Selector').show();
                 $('.hint-Selector').empty();
             }
             for (let i = 0; i < showCity.length; i++) {
                 const element1 = showCity[i];
                 const element2 = showID[i];
-                console.log(element1);
-                console.log(element2);
+                // console.log(element1);
+                // console.log(element2);
                 $('.hint-Selector').append('<option value="'+element2+'">'+element1+'</option>');    
+                $('.hint-Selector').hide();
+                $('.hint').hide();
             }
         });
     }  
@@ -557,15 +551,16 @@ var tagRemove = 0
 function showRemove() {
     if (tagRemove === 0) {
         if ($('.remove').length!==0) {
-            for(var i=0; i<window.localStorage.length;i++){
+            for(var i=0; i<window.localStorage.length-1;i++){
                 var city = window.localStorage.key(i);
                 console.log(city);
                 $('.remove').append('<li class="ops"><input type="button"  class="op" value='+city+' onclick="Delete(this.value)"></input></li>');
             }
             
             $('.ops').css("background-color","white");
+            $('.ops').css("margin-right","50px");
             $('.op').css("width","300px");
-            $('.op').css("height","100px");
+            $('.op').css("height","80px");
             $('.op').css("font-size","40px");
             $('.card').css("position","relative");
             $('.card').css("float","right");
@@ -592,6 +587,15 @@ function Delete(name) {
     $('.container-card#'+name).remove();
     $('.op[value='+name+']').remove();
     window.localStorage.removeItem(name);
+    var request = indexedDB.open("weatherPWA",1); 
+    request.onsuccess = function (event) {
+    var db = this.result;
+    var store = db.transaction("weather",'readwrite').objectStore("weather");
+    store.delete(name);
+    } 
+    request.onerror = function (event) {
+        console.log("opendb:", event);
+    };
 }
 
 // ask permission to push notification to user
@@ -612,11 +616,12 @@ function askPermission() {
 }
 
 if('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js',{scope:'/'})
+    window.navigator.serviceWorker.register('./service-worker.js',{scope:'/'})
     .then(  // promise resolve
     	function(reg){
             console.log("Successfully registed serviceWorker. Scope is: "+ reg.scope);
             askPermission();
+            
     	})
     .catch(  // promise rejected
     	function(error){
@@ -625,92 +630,176 @@ if('serviceWorker' in navigator) {
 }else{
     console.log("service worker not supported")
 };
+var state = 0;
+function show_time() {
+    $('.request-sync').css("display","none");
+    $('.real-sync').css("display","none");
+    state = 1;
+}
+var num_request = 0; 
 
-if (navigator.serviceWorker && 'SyncManager' in window) {
-    navigator.serviceWorker.ready.then(
-        function (registration) {
-        document.getElementById('confirm_sync').addEventListener('click',()=>{
-            if (registration.sync) {
+var cycle = function () {
+    registerPeriodicSync();
+    if (state === 1 ) {
+        console.log("bg sync is stopped.");
+    }
+    else {setTimeout(cycle,5000);}
+}
+cycle();
+
+    
+
+function registerPeriodicSync() {
+    window.navigator.serviceWorker.ready.then(function (registration) {
+        if (registration.sync) {
+            registration.sync.register('periodicSync').then(function (event) {
+                console.log("Periodic_Sync started!");
+            }).then(()=>{
                 
-                registration.sync.register('sync_test').then(function (event) {
-                    console.log(registration.sync)
-                    var input = document.getElementById('input_sync');
-                    console.log('background sync start: ',input.value,event);
-                }).then(()=>{
-                    console.log("registration finished")
-                })
-                .catch(function (error) {
-                    return error 
-                })
+                num_request = num_request + 1;
+                var time = new Date();
+                var requesttime = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds();
+                var numOfrequest = "request "+num_request.toString();
+                //window.localStorage.setItem(numOfrequest,requesttime);
+                $('.request-sync').empty();
+                $('.request-sync').append('<p class="default-text">Request background sync at:</p>');
+                $('.request-sync').append('<p id="request-time">'+requesttime+'</p>');
+                $('.request-sync').css("color","white");
+                $('.request-sync').css("margin-top","300px");
+                $('#request-time').css("font-size","70px");
+                $('#request-time').css("text-align","center");
+
+                setTimeout(function () {
+                    var request = indexedDB.open("weatherPWA",1);
+                    request.onsuccess = function () {
+                        db = this.result; 
+                        var tx = db.transaction("real time",'readwrite');
+                        store = tx.objectStore("real time");
+                        var req = store.get(0);
+                        req.onsuccess = function (event) {
+                            //console.log(req.result.time);
+                            var timeget = req.result.time;
+                            var show = timeget.slice(timeget.indexOf(" "),timeget.length-1);
+                            $('.real-sync').empty();
+                            $('.real-sync').append('<p id="default-text">Background sync at:</p>');
+                            $('.real-sync').append('<p id="sync-time">'+show+'</p>');
+                            $('.real-sync').css("color","white");
+                            $('.real-sync').css("margin-top","300px");
+                            $('#sync-time').css("font-size","70px");
+                            $('#sync-time').css("text-align","center");
+                            $('#default-text').css("font-size","55px");
+                            $('#default-text').css("text-align","center");
+                        }
+                        req.onerror = function (err) {
+                            console.log(err);
+                        }
+                    }
+                },500)
+
+                console.log("Periodic sync registration finished");
+            }).then(()=>{
+                $('.default-text').css("font-size","55px");
+                $('.default-text').css("text-align","center");      
+            })
+            .catch(function (error) {
+                return error
+            })
+        }else{
+            console.log("sync function not supported");
+        }
+    })
+    
+}
+var alreadydone = 0;
+window.navigator.serviceWorker.ready.then(function (registration) {
+        document.getElementById('confirm').addEventListener('click',function () {
+        if (sub_state === 1) {
+            var getInput = $('.search-box').val();
+            getInput = getInput.slice(0,1).toUpperCase()+getInput.slice(1).toLowerCase();
+            if (getInput!=="") {
+                if (window.navigator.onLine===true) {
+                    console.log("online mode");
+                    readJSONfile("/json/city.json", function(text){
+                        var data = JSON.parse(text);
+                        //console.log(getCityIDbyName(getInput,data));
+                        var id = getCityIDbyName(getInput,data);
+                        if (id !== 0) {
+                            searchADD(id);
+                        }
+                    });
+                }else{
+                    if (registration.sync) {
+                        registration.sync.register('sync_test').then(function (event) {
+                            console.log('background sync start: ',getInput+" need to add after having connection.");
+                            //$('.search-box').val("");
+                            var input = $('.search-box').val();
+                            var msg = JSON.stringify({type:'bgsync', msg:{name:input}});
+                            
+                            window.navigator.serviceWorker.controller.postMessage(msg);
+                            console.log(msg+" already posted");
+                            
+                        }).then(()=>{
+                            console.log("registration finished");
+                            alreadydone = 1;
+                        })
+                        .catch(function (error) {
+                            return error 
+                        })
+                    }else{
+                        console.log("sync function not supported")
+                    }
+                    alert("no network connection");
+                }
+                
             }else{
-                console.log("sync function not supported")
-            }
+                alert("empty city input")
+            }  
+            
+            $('.hint-Selector').hide();
+            $('.hint').remove();
+        }else{
+            alert("subscribe the application first.");
+            $('.search-box').val("");
+            $('.hint-Selector').hide();
+            $('.hint').remove();
+        }
+        
+        
     })
 })
-}else{
-    console.log("sync manager not supported")
-}
 
-// if('serviceWorker' in navigator && 'SyncManager' in window){
-//     console.log("sync function supported");
-//     document.getElementById('confirm_sync').addEventListener('click', ()=> {
-        
-//         navigator.serviceWorker.ready.then(function(swRegistration) {
-//             console.log('background sync start: ',input.value);
-//             return swRegistration.sync.register('sync');
-//             });
-//             //event.preventDefault();
-//             // new Promise(function (resolve,reject) {
-//             //     Notification.requestPermission(function(result) {
-//             //         if (result !== 'granted') return reject(Error("Denied notification permission"));
-//             //         resolve();
-//             //       })
-//             // }).then(function () {
-//             //     return navigator.serviceWorker.ready;
-//             // }).then(function (reg) {
-//             //     return reg.sync.register('sync');
-//             // }).then(function () {
-//             //     var input = document.getElementById('input_sync');
-//             //     console.log('background sync start: ',input.value);
-//             // }).catch(function (err) {
-//             //     console.log(`background sync failed`, err);
-//             // });
-//         })
-// }
+//---------------------------  periodic sync  ------------------------------
 
-
-// navigator.serviceWorker.ready.then(function(registration){
-//     var tag = 'sample_sync_event';
-//     document.getElementById('confirm_sync').addEventListener('click', function(e){
-//         registration.sync.register(tag).then(function(){
-//             console.log(`后台同步已触发：${tag}`);
-
-//             var inputValue = document.getElementById('search').value;
-//             var msg = JSON.stringify({ type : 'bgsync' , msg : {name : inputValue}});
-//             navigator.serviceWorker.controller.postMessage(msg);
-//         }).catch(function(err){
-//             console.log(`后台同步触发失败：${err}`)
-//         })
-        
+// if (navigator.serviceWorker.controller) {
+//     navigator.serviceWorker.ready.then(function (reg) {
+//         if (reg.periodicSync) {
+//             reg.periodicSync.register({
+//                 tag: 'periodicSync',
+//                 minPeriod: 1000,
+//                 powerState: 'auto',
+//                 networkState: 'any'
+//             }).then(function (event) {
+//                 console.log('Periodicc registration successful', event);
+//             }).catch(function (error) {
+//                 console.log('Periodicc registration failed', error);
+//             })
+//         }else{
+//             //console.log("Periodic sync not supported");
+//         }
 //     })
-// })
-
-
-// if('serviceWorker' in navigator && 'PushManager' in window){
-//     navigator.serviceWorker.register('/service-worker.js').then(function(registration){
-//         console.log("this is notification part.")
-//         displayNotification();
-//     }).catch(error => {
-//         console.log(error);
-//       });
+// }else{
+//     //console.log("service worker controller not working");
 // }
 
-function displayNotification() {
+//---------------------------  periodic sync  ------------------------------
+
+
+function displayNotification(content) {
     if (Notification.permission == 'granted') {
       navigator.serviceWorker.getRegistration().then(reg => {
         var options = {
           icon: './icon.png',
-          body: 'This is a notification from PWA',
+          body: content,
           //image: 'https://augt-forum-upload.s3-ap-southeast-1.amazonaws.com/original/1X/6b3cd55281b7bedea101dc36a6ef24034806390b.png'
         };
         reg.showNotification('weather PWA', options);
@@ -765,7 +854,7 @@ window.urlBase64ToUint8Array = function (base64String) {
 }
 
 function sendSubscriptionToServer(body, url) {
-    url = url || 'http://192.168.1.191:3000/subscription';
+    url = url || 'http://192.168.1.236:3000/subscription';
     return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.timeout = 60000;
@@ -774,6 +863,12 @@ function sendSubscriptionToServer(body, url) {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 try {
                     response = JSON.parse(xhr.responseText);
+                    console.log("user subscribed!");
+                    alert("subscribed!");
+                    sub_state = 1;
+                    window.localStorage.setItem("subscription",1);
+                    $('#subscription_btn').remove();
+                    $('#add_btn').remove();
                 }
                 catch (e) {
                     response = xhr.responseText;
@@ -793,17 +888,17 @@ function sendSubscriptionToServer(body, url) {
     });
 }
 
-var sub_state = 0;
+
 function PUSH() {
     if (sub_state === 0) {
         if ('serviceWorker' in navigator && 'PushManager' in window) {
             var publicKey = "BPwgIYTh9n2u8wpAf-_VzZ4dwaBY8UwfRjWZzcoX6RN7y5xD0RL9U4YDCdeoO3T8nJcWsQdvNirT11xJwPljAyk";
-            navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
+            window.navigator.serviceWorker.ready.then(function (registration) {
                 //displayNotification();
                 // open the subscription function of the page
                 return subscribeUserToPush(registration, publicKey);
             }).then(function (subscription) {
-                console.log("user subscribed!");
+                
                 var body = {subscription: subscription};
                 // give every user a unique id in order to push notification
                 body.uniqueid = new Date().getTime();
@@ -819,34 +914,139 @@ function PUSH() {
         }else{
             console.log('Push messaging is not supported.')
         }
-        alert("subscribed!");
+        
     }else{
         alert("you have already subscribed.")
     }   
-    sub_state = 1;
+    
 }
 
-navigator.serviceWorker.addEventListener('message',function (e) {
-    var action = e.data;
-    console.log(`the client clicked on ${e.data}`);
-    switch(action){
-        case 'next-page':
-            location.href = './pages/next-page.html';
-            break;
-        case 'contact-me':
-            location.href = './pages/contact-me.html';
-            break;
-    }
-})
+// navigator.serviceWorker.addEventListener('message',function (e) {
+//     var action = e.data;
+//     console.log(`the client clicked on ${e.data}`);
+//     switch(action){
+//         case 'next-page':
+//             location.href = './pages/next-page.html';
+//             break;
+//         case 'contact-me':
+//             location.href = './pages/contact-me.html';
+//             break;
+//     }
+// })
 
 
+
+// getJSON(url).then((data)=>{
+//     var city = data.name;
+//     var temp = (data.main.temp-273.15).toString();
+//     if (temp.includes('.')) {
+//         var Temp = temp.slice(0,temp.indexOf('.')+2)+"℃";
+//     }else{
+//         var Temp = temp.slice(0,temp.length)+"℃";
+//     }
+//     var des = data.weather[0].main;
+//     console.log(des);
+//     addcard(city,Temp,des);
+//     var jsonstr = JSON.stringify(data)
+//     window.localStorage.setItem(city,jsonstr);
+// }
+
+
+var version = 1;
 window.addEventListener('load',function () {
     function updateOnlineStatus(event) {
       if (navigator.onLine) {
         console.log('device is now online');
         $('#all').css("background-image", "url('/images/background/bg1.jpg')");
         $('.test_sync').css("bottom","0px");
-        $('.offline').remove()
+        $('.offline').remove();
+        if (alreadydone === 1) {
+            setTimeout(function () {
+            for (let i = 0; i < window.localStorage.length-1; i++) {
+                var cityname = window.localStorage.key(i);
+                $('.container-card#'+cityname).remove();
+            }
+            // navigator.serviceWorker.addEventListener('message',function (e) {
+            //     console.log(e.data);
+            // })
+            
+            var request = indexedDB.open("weatherPWA");
+            request.onsuccess = function (event) {
+            var db = this.result;
+            
+            db.transaction("real time",'readwrite').objectStore("real time").openCursor()
+            .onsuccess = function (e) {
+                let cursor = e.target.result;
+                if (cursor) {
+                    var city = cursor.key;
+                    var jsonstr = cursor.value.des;
+                    if (isNaN(city)) {
+                        window.localStorage.setItem(city,jsonstr);
+                    }else{
+
+                    }
+                    
+                    //console.log(cursor.key, cursor.value.des);
+                    
+                    cursor.continue();
+                }else{
+                    for (let i = 0; i < window.localStorage.length-1; i++) {
+                        var dataget = window.localStorage.getItem(window.localStorage.key(i));
+                        var data = JSON.parse(dataget);
+                        var city = data.name;
+                        var temp = (data.main.temp-273.15).toString();
+                        if (temp.includes('.')) {
+                            var Temp = temp.slice(0,temp.indexOf('.')+2)+"℃";
+                        }else{
+                            var Temp = temp.slice(0,temp.length)+"℃";
+                        }
+                        var des = data.weather[0].main;
+                        
+                        //console.log(des);
+                        addcard(city,Temp,des);  
+                    }
+                }
+                
+            };
+            } 
+            request.onerror = function (event) {
+                console.log("opendb:", event);
+            };
+            
+            
+        },2000);
+    }
+        
+        
+        setTimeout(function () {
+            var request = indexedDB.open("weatherPWA",1);
+            request.onsuccess = function () {
+                db = this.result;
+                var tx = db.transaction("real time",'readwrite');
+                store = tx.objectStore("real time");
+                var req = store.get(0);
+                req.onsuccess = function (event) {
+                    //console.log(req.result.time);
+                    var timeget = req.result.time;
+                    var show = timeget.slice(timeget.indexOf(" "),timeget.length-1);
+                    
+                    $('.real-sync').empty();
+                    $('.real-sync').append('<p id="default-text">Background sync at:</p>');
+                    $('.real-sync').append('<p id="sync-time">'+show+'</p>');
+                    $('.real-sync').css("color","white");
+                    $('.real-sync').css("margin-top","300px");
+                    $('#sync-time').css("font-size","70px");
+                    $('#sync-time').css("text-align","center");
+                    $('#default-text').css("font-size","55px");
+                    $('#default-text').css("text-align","center");
+                    
+                }
+                req.onerror = function (err) {
+                    console.log(err);
+                }
+            }
+        },300)
+        
       } else {
         console.log('device is now offline');
         $('#all').append('<div class="offline"></div>');
@@ -868,6 +1068,7 @@ window.addEventListener('load',function () {
   });
 
 
+
 //============================== get location =============================
 function locateME() {
     if(navigator.geolocation){  
@@ -881,7 +1082,8 @@ function locateME() {
         var lon = position.coords.longitude.toString();  
         lat = lat.slice(0,lat.indexOf('.')+3);
         lon = lon.slice(0,lon.indexOf('.')+3);
-        console.log("get location successfully: "+"lat: "+lat+" lon: "+lon);  
+        console.log("get location successfully: "+"latitude: "+lat+" longitude: "+lon);  
+        alert("get location successfully:\n "+"latitude: "+lat+"  longitude: "+lon);
     }
     function errorCallback(error) {
         console.log("failed to get your location");  

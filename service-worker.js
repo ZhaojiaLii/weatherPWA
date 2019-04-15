@@ -1,4 +1,6 @@
 var cacheName = "staticCache"
+var APIkey = '186bd32bbcadf6c77e6c370efba0b47d';
+var tempdata = "";
 var staticCache = [
     '/',
     'index.html',
@@ -44,7 +46,7 @@ var staticCache = [
 ];
 
 self.addEventListener('install', function(e) {
-    //console.log('[Service Worker] Install');
+    console.log('[Service Worker] Install');
     e.waitUntil(
       caches.open(cacheName)
       .then(function(cache) {
@@ -58,7 +60,7 @@ self.addEventListener('install', function(e) {
   });
   
 self.addEventListener('activate', function(e) {
-    //console.log('[ServiceWorker] Activate');
+    console.log('[ServiceWorker] Activate');
     e.waitUntil(
         caches.keys().then(function(keyList){
             return Promise.all(keyList.map(function(key){
@@ -72,28 +74,10 @@ self.addEventListener('activate', function(e) {
     return self.clients.claim();
   });
 
-  self.addEventListener('sync',function(e){
-    console.log('service worker need to sync in background...',e);
-    if (e.tag == 'sync_test'){
-      console.log("syncing new request...");
-      const url = 'http://127.0.0.1:3000/sync';
-      init = {
-        method:'GET'
-      }
-      var request = new Request(url, init);
-      e.waitUntil(
-          fetch(request).then(function (response) {
-            console.log(response);
-              return response;
-          })
-      );
-      console.log("sync finished!")
-    }
-  })
 
-  
+
 var requestCache = 'requestCache';
-var cacheFetchUrls = ['http://192.168.1.191:3000/sync'];
+var cacheFetchUrls = ['http://192.168.1.236:3000/sync'];
 
 self.addEventListener('fetch', function(e) {
       //console.log('[ServiceWorker] Fetch', e.request.url);
@@ -141,12 +125,143 @@ self.addEventListener('fetch', function(e) {
 
 
 
+var db;
+var store;
+self.addEventListener('sync',function(e){
+  //console.log('service worker need to sync in background...',e);
+  if (e.tag == 'sync_test'){
+    console.log("request from Weather API background sync fired");
+    
+    init = {
+      method:'GET'
+    }
+
+    let msgPromise = new Promise(function (resolve, reject) {
+      setTimeout(resolve,1000);
+    })
+    e.waitUntil(msgPromise.then(function (data) {
+      var cityurl = 'http://api.openweathermap.org/data/2.5/weather?q='+tempdata+'&APPID='+APIkey;
+      var request = new Request(cityurl,init);
+      fetch(cityurl).then(function (response) {
+        if (response.status !== 200) {
+          console.log('There was a problem. Status Code: ' + response.status);
+          return;
+        }
+        response.json().then(function(data) {
+          var request = indexedDB.open("weatherPWA",1);
+          request.onsuccess = function (event) {
+            console.log(data.name);
+            db = this.result;
+            var tx = db.transaction("real time",'readwrite');
+            store = tx.objectStore("real time");
+            var obj = {
+              id: data.name,  
+              des: JSON.stringify(data)
+            }
+            var req = store.add(obj);
+            req.onsuccess = function (event) {     
+                //console.log(obj+" insert in DB successful");
+                
+            };
+            req.onerror = function (event) {
+                console.log(obj+" insert in DB error",this.error);
+            }
+          } 
+          request.onerror = function (event) {
+              console.log("opendb:", event);
+          };
+          request.onupgradeneeded = function (event) {
+            var db = event.target.result;
+            console.log("opened...",db);
+            var store1;
+            if (!db.objectStoreNames.contains( "real time" )) {
+              store1 = db.createObjectStore("real time", {keyPath:'id',autoIncrement: true});
+              store1.createIndex('des','des',{unique:false});
+              console.log("new DB for weathers created");
+            }else{
+              console.log("weather DB already existed");
+            }
+      }   
+          
+          
+        });
+      }).catch(function (error) {
+        console.log(error);
+      })
+
+      return fetch(request);
+    }).then(function (response) {
+      console.log(response);
+      return response
+    })
+  )
+    console.log("sync finished!")
+
+  }else if(e.tag == 'periodicSync'){
+    console.log("Periodic background Sync fired.");
+    fetch('http://192.168.1.236:3000/sync').then(function (response) {
+      if (response.status !== 200) {
+        console.log('Looks like there was a problem. Status Code: '+response.status);
+        return;
+      }
+      //console.log(response);
+      response.text().then(function (data) {
+        console.log("succeed access to sync interface");
+        var request = indexedDB.open("weatherPWA",1);
+        request.onupgradeneeded = function (event) {
+          var store = event.currentTarget.result.createObjectStore("real time", {keyPath:'id',autoIncrement: true });  
+          store.createIndex('time','time',{unique:false});
+        }
+        request.onsuccess = function (event) {
+          db = this.result;
+          var tx = db.transaction("real time",'readwrite');
+          store = tx.objectStore("real time");
+          var obj = {
+            id:0,
+            time:data
+          }
+          var req = store.put(obj);
+          req.onsuccess = function (event) {     
+              //console.log(obj+" insert in DB successful");
+              
+          };
+          req.onerror = function (event) {
+              console.log(obj+" insert in DB error",this.error);
+          }
+        }
+        request.onerror = function (event) {
+          console.log("opendb:", event);
+        };
+        
+        console.log(data);
+      })
+    })
+
+  }
+});
+var D = 0 ;
+var requestDatA = function (url) {
+  
+  
+}
+
+self.addEventListener('message',function (e) {
+  e.source.postMessage(D);
+})
+
+// self.addEventListener('periodicsync',function (event) {
+//   if (event.registration.tag === "periodicSync") {
+//     console.log("Periodic event occurred: ", event);
+//   }  
+// })
+
 self.addEventListener('message' , function(e){
   var data = JSON.parse(e.data),
       type = data.type,
       msg = data.msg;
 
-  console.log(`service worker get message type: ${type} ; msg : ${JSON.stringify(msg)}`)
+  //console.log(`service worker get message type: ${type} ; msg : ${msg.name}`);
+  tempdata = msg.name;
 
   dealData.trigger(type , msg);
 })
@@ -171,6 +286,16 @@ class DealData{
   }
 }
 const dealData = new DealData();
+  
+
+
+
+
+
+
+
+
+
 
 
 

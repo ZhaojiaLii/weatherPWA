@@ -261,7 +261,9 @@
 }
 
 #confirm_sync{
-    height: 30px;
+    height: 60px;
+    width: 300px;
+    font-size: 50px;
 }
 
 
