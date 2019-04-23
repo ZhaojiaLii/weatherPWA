@@ -1,3 +1,4 @@
+
 const util      = require('./util');
 const http      = require('http');
 const Koa       = require('koa');
@@ -105,7 +106,7 @@ app.use(cors({
         if (ctx.url === '/subscription') {
             return "*"; // 允许来自所有域名请求
         }
-        return 'http://localhost:8085';
+        return 'http://localhost:8887';
     },
     exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
     maxAge: 5,

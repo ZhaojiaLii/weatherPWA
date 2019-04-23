@@ -77,7 +77,7 @@ self.addEventListener('activate', function(e) {
 
 
 var requestCache = 'requestCache';
-var cacheFetchUrls = ['http://192.168.1.236:3000/sync'];
+var cacheFetchUrls = ['http://192.168.1.137:3000/sync'];
 
 self.addEventListener('fetch', function(e) {
       //console.log('[ServiceWorker] Fetch', e.request.url);
@@ -148,7 +148,7 @@ self.addEventListener('sync',function(e){
           return;
         }
         response.json().then(function(data) {
-          var request = indexedDB.open("weatherPWA",1);
+          var request = indexedDB.open("weatherPWA");
           request.onsuccess = function (event) {
             console.log(data.name);
             db = this.result;
@@ -199,7 +199,7 @@ self.addEventListener('sync',function(e){
 
   }else if(e.tag == 'periodicSync'){
     console.log("Periodic background Sync fired.");
-    fetch('http://192.168.1.236:3000/sync').then(function (response) {
+    fetch('http://192.168.1.137:3000/sync').then(function (response) {
       if (response.status !== 200) {
         console.log('Looks like there was a problem. Status Code: '+response.status);
         return;
@@ -207,12 +207,13 @@ self.addEventListener('sync',function(e){
       //console.log(response);
       response.text().then(function (data) {
         console.log("succeed access to sync interface");
-        var request = indexedDB.open("weatherPWA",1);
+        var request = indexedDB.open("weatherPWA");
         request.onupgradeneeded = function (event) {
-          var store = event.currentTarget.result.createObjectStore("real time", {keyPath:'id',autoIncrement: true });  
+          var store = event.target.result.createObjectStore("real time", {keyPath:'id',autoIncrement: true });  
           store.createIndex('time','time',{unique:false});
         }
         request.onsuccess = function (event) {
+          console.log(data);
           db = this.result;
           var tx = db.transaction("real time",'readwrite');
           store = tx.objectStore("real time");

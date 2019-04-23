@@ -1,7 +1,7 @@
 'use strict'
 var Privatekey = 'TIrMnK-r--TE7Tnwf-x4JfKwuFKz5tmQuDRWYmuwbhY';
 var APIkey = '186bd32bbcadf6c77e6c370efba0b47d';
-var testurl = 'http://192.168.1.236:3000/sync';
+var testurl = 'http://192.168.1.137:3000/sync';
 var windowDialog = document.getElementById('dialog');
 var card = document.getElementById('card');
 var description = "";
@@ -412,7 +412,7 @@ var getJSON = function (url) {
     if (url === unvalidurl) {
         alert("cannot find the city from server");
         $('.hint-Selector').hide();
-        $('#search-box').val() = "";
+        $('#search-box').val("") ;
     }else{
         var type = 'get';  
         return new Promise(function (resolve,reject) {
@@ -587,7 +587,7 @@ function Delete(name) {
     $('.container-card#'+name).remove();
     $('.op[value='+name+']').remove();
     window.localStorage.removeItem(name);
-    var request = indexedDB.open("weatherPWA",1); 
+    var request = indexedDB.open("weatherPWA"); 
     request.onsuccess = function (event) {
     var db = this.result;
     var store = db.transaction("weather",'readwrite').objectStore("weather");
@@ -658,7 +658,8 @@ function registerPeriodicSync() {
                 
                 num_request = num_request + 1;
                 var time = new Date();
-                var requesttime = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds();
+                var second = time.getSeconds();
+                var requesttime = time.getHours() + ":" + time.getMinutes() + ":" + second;
                 var numOfrequest = "request "+num_request.toString();
                 //window.localStorage.setItem(numOfrequest,requesttime);
                 $('.request-sync').empty();
@@ -670,7 +671,7 @@ function registerPeriodicSync() {
                 $('#request-time').css("text-align","center");
 
                 setTimeout(function () {
-                    var request = indexedDB.open("weatherPWA",1);
+                    var request = indexedDB.open("weatherPWA");
                     request.onsuccess = function () {
                         db = this.result; 
                         var tx = db.transaction("real time",'readwrite');
@@ -854,7 +855,7 @@ window.urlBase64ToUint8Array = function (base64String) {
 }
 
 function sendSubscriptionToServer(body, url) {
-    url = url || 'http://192.168.1.236:3000/subscription';
+    url = url || 'http://192.168.1.137:3000/subscription';
     return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.timeout = 60000;
@@ -1019,7 +1020,7 @@ window.addEventListener('load',function () {
         
         
         setTimeout(function () {
-            var request = indexedDB.open("weatherPWA",1);
+            var request = indexedDB.open("weatherPWA");
             request.onsuccess = function () {
                 db = this.result;
                 var tx = db.transaction("real time",'readwrite');
